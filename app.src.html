@@ -255,6 +255,18 @@ try{P=JSON.parse(localStorage.getItem(PKEY))||[];}catch(e){P=[];}
 try{var lastP=findP(localStorage.getItem(LKEY));if(lastP&&!lastP.pin)login(lastP);}catch(e){}
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
 
+/* رابط استيراد: البيانات في جزء # من الرابط، فلا تُرسل إلى الخادم ولا تُحفظ في الكود */
+var pendingImport=null;
+(function(){
+  try{
+    var m=/^#i=(.+)$/.exec(location.hash);if(!m)return;
+    var o=JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,'+').replace(/_/g,'/')))));
+    if(o&&o.c&&Array.isArray(o.n)&&Array.isArray(o.s))pendingImport=o;
+    history.replaceState(null,'',location.pathname);
+  }catch(e){}
+})();
+function importInfo(){return 'فصل «'+pendingImport.c+'» ('+pendingImport.s.join('، ')+') وفيه '+pendingImport.n.length+' طالباً';}
+
 var tab='entry',armed=null,undoSnap=null,msg=null,showNew=false,Q=null,selItem=null;
 function cur(){for(var i=0;i<S.classes.length;i++)if(S.classes[i].id===S.current)return S.classes[i];return S.classes[0]||null;}
 function allItems(c){var a=[];c.comps.forEach(function(p){p.items.forEach(function(it){a.push({comp:p,item:it});});});return a;}
@@ -292,6 +304,7 @@ function totalWorth(c){return c.comps.reduce(function(a,p){return a+p.worth;},0)
 function vLogin(){
   var h='<div class="top"><h1>دفتر رصد الدرجات</h1></div>';
   if(msg)h+='<div class="note '+(msg.kind||'')+'" role="status">'+esc(msg.text)+'</div>';
+  if(pendingImport)h+='<div class="note">فتحتَ رابط استيراد: '+esc(importInfo())+'. ادخل إلى دفترك أو أنشئه، ثم أكّد الإضافة.</div>';
   if(P.length){
     h+='<div class="sheet stack"><h2>من المعلم؟</h2><p class="small dim">لكل معلم دفتره المستقل: فصوله وطلابه ودرجاته لا تظهر لغيره.</p>';
     P.forEach(function(p){
@@ -302,7 +315,7 @@ function vLogin(){
   }
   if(showNewT||!P.length){
     h+='<div class="sheet stack"><h2>'+(P.length?'معلم جديد':'مرحباً، أنشئ دفترك')+'</h2>'+
-      '<div class="row"><label class="field" style="flex:1 1 200px">اسم المعلم<input type="text" id="nt-name" autocomplete="off"></label>'+
+      '<div class="row"><label class="field" style="flex:1 1 200px">اسم المعلم<input type="text" id="nt-name" autocomplete="off" value="'+esc(pendingImport&&pendingImport.w||'')+'"></label>'+
       '<label class="field">رمز سري (اختياري، 4 أرقام فأكثر)<input type="password" inputmode="numeric" autocomplete="off" id="nt-pin"></label></div>'+
       '<p class="small dim">الرمز يمنع الدخول العابر إلى دفترك على جهاز مشترك، وليس تشفيراً. إن نسيته فلا يمكن استرجاعه.</p>'+
       '<div class="row"><button class="primary" data-act="newteacher">إنشاء الدفتر</button>'+(P.length?'<button data-act="shownewt">إلغاء</button>':'')+'</div></div>';
@@ -319,6 +332,7 @@ function render(){
       return '<option value="'+k.id+'"'+(c&&k.id===c.id?' selected':'')+'>'+esc(k.name+' — '+k.subject)+(k.example?' (مثال)':'')+'</option>';}).join('')+'</select>';
   }
   h+='<button data-act="newclass">فصل جديد</button><button class="ghost" data-act="switch">'+esc(me.name)+' · تبديل المعلم</button>'+savedHtml()+'</div></div>';
+  if(pendingImport)h+='<div class="sheet stack noprint"><h2>إضافة من الرابط</h2><p>سيُضاف '+esc(importInfo())+' إلى دفتر «'+esc(me.name)+'». فصولك الحالية لا تتغير.</p><div class="row"><button class="primary" data-act="impok">إضافة إلى دفتري</button><button data-act="impno">تجاهل</button></div></div>';
   if(showNew||!c)h+=newClassForm();
   if(c){
     if(c.example)h+='<div class="note warn noprint">هذا فصل تجريبي بأسماء ودرجات وهمية ليريك طريقة العمل. أنشئ فصلك من «فصل جديد»، ثم احذف المثال من تبويب «التوزيع».</div>';
@@ -355,7 +369,7 @@ function vEntry(c){
   if(!items.length)return '<div class="sheet">لا توجد تقييمات. أضفها من تبويب «التوزيع».</div>';
   if(!selItem||!findItem(c,selItem))selItem=items[0].item.id;
   var h='<div class="row noprint"><label class="field">التقييم<select id="selitem" data-f="selitem">'+items.map(function(x){
-    return '<option value="'+x.item.id+'"'+(x.item.id===selItem?' selected':'')+'>'+esc(x.comp.name===x.item.name?x.item.name:x.comp.name+' — '+x.item.name)+' (من '+x.item.max+')</option>';}).join('')+'</select></label>'+
+    return '<option value="'+x.item.id+'"'+(x.item.id===selItem?' selected':'')+'>'+esc(x.item.name.indexOf(x.comp.name)===0?x.item.name:x.comp.name+' — '+x.item.name)+' (من '+x.item.max+')</option>';}).join('')+'</select></label>'+
     '<button class="primary" data-act="quick">إدخال سريع</button>'+
     '<button data-act="fillfull">الدرجة الكاملة للخانات الفارغة</button>'+
     (undoSnap?'<button data-act="undo">تراجع</button>':'')+'</div>';
@@ -589,6 +603,17 @@ app.addEventListener('click',function(ev){
       if(!added&&!skipped)say('لم تُكتب أسماء.','err');
       else say('أُضيف '+added+' طالب'+(skipped?'، وتُجووز '+skipped+' اسم مكرر.':'.'));
       break;
+    case 'impok':
+      var addedN=0,firstId=null;
+      pendingImport.s.forEach(function(sub){
+        if(S.classes.some(function(k){return k.name===pendingImport.c&&k.subject===sub;}))return;
+        var nk=makeClass(pendingImport.c,sub,pendingImport.t||0,pendingImport.n);
+        S.classes.push(nk);addedN++;if(!firstId)firstId=nk.id;
+      });
+      if(firstId){S.current=firstId;selItem=null;tab='entry';}
+      pendingImport=null;showNew=false;save();
+      say(addedN?'أُضيف '+addedN+' فصل إلى دفترك. اختر المادة من القائمة أعلى الصفحة.':'هذه الفصول موجودة في دفترك مسبقاً، فلم يُضف شيء.');break;
+    case 'impno':pendingImport=null;break;
     case 'pick':var pp=findP(arg);if(pp){if(pp.pin)pendingPin=(pendingPin===arg?null:arg);else login(pp);}break;
     case 'pinok':doPin();break;
     case 'shownewt':showNewT=!showNewT;break;
