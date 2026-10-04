@@ -186,6 +186,14 @@ function parseNum(raw){var s=normDigits(raw);return /^\d+(\.\d{1,2})?$/.test(s)?
 
 /* ---------- القوالب ---------- */
 var TEMPLATES=[
+  {name:'التربية الإسلامية / القرآن الكريم — ثانوي (الكويت)',
+   note:'من بطاقة المتابعة للفصل الأول 2026/2027: أعمال الفصل 40 (فترتان) والامتحان 60.',
+   pass:50,dec:1,comps:[
+     ['السلوك',6,[['السلوك — الفترة الأولى',3],['السلوك — الفترة الثانية',3]]],
+     ['المشاركة',6,[['المشاركة — الفترة الأولى',3],['المشاركة — الفترة الثانية',3]]],
+     ['الواجبات',6,[['الواجبات — الفترة الأولى',3],['الواجبات — الفترة الثانية',3]]],
+     ['المشروع',7,[['المشروع — الفترة الأولى',3.5],['المشروع — الفترة الثانية',3.5]]],
+     ['الاختبار القصير',15],['امتحان نهاية الفصل',60]]},
   {name:'40 أعمال + 60 اختبار نهائي (الكويت: متوسط وثانوي)',
    note:'نسبة 40/60 من تقارير صحفية عن اللائحة الجديدة. تقسيم الأربعين إلى أربعة بنود مثال للتعديل؛ طابقه مع وثيقة مادتك.',
    pass:50,comps:[['المشاركة',10],['الواجبات',10],['الاختبارات القصيرة',10],['المشاريع',10],['الاختبار النهائي',60]]},
@@ -198,12 +206,12 @@ var TEMPLATES=[
 ];
 function makeClass(name,subject,ti,names){
   var t=TEMPLATES[ti]||TEMPLATES[0];
-  return {id:uid(),name:name,subject:subject,pass:t.pass,decimals:0,
-    comps:t.comps.map(function(c){return {id:uid(),name:c[0],worth:c[1],items:[{id:uid(),name:c[0],max:c[1]}]};}),
+  return {id:uid(),name:name,subject:subject,pass:t.pass,decimals:t.dec||0,
+    comps:t.comps.map(function(c){return {id:uid(),name:c[0],worth:c[1],items:(c[2]||[[c[0],c[1]]]).map(function(i){return {id:uid(),name:i[0],max:i[1]};})};}),
     students:(names||[]).map(function(n){return {id:uid(),name:n};}),scores:{}};
 }
 function exampleState(){
-  var c=makeClass('الثامن / 2','العلوم',0,['أحمد سالم','يوسف خالد','عبدالله فهد','محمد ناصر','علي حسن','سعد مبارك','عمر جاسم','حمد راشد']);
+  var c=makeClass('الثامن / 2','العلوم',1,['أحمد سالم','يوسف خالد','عبدالله فهد','محمد ناصر','علي حسن','سعد مبارك','عمر جاسم','حمد راشد']);
   c.example=true;
   /* اختباران قصيران بدرجات عظمى مختلفة لإظهار التحويل إلى وزن البند */
   c.comps[2].items=[{id:uid(),name:'قصير 1',max:15},{id:uid(),name:'قصير 2',max:20}];
@@ -260,19 +268,21 @@ function allItems(c){var a=[];c.comps.forEach(function(p){p.items.forEach(functi
 function findItem(c,id){var a=allItems(c);for(var i=0;i<a.length;i++)if(a[i].item.id===id)return a[i];return null;}
 
 /* ---------- الحساب ---------- */
-/* داخل البند تُجمع النقاط ثم تُحوَّل خطياً إلى وزن البند. الفارغ والمعفى لا يدخلان الحساب. */
+/* داخل البند تُجمع النقاط وتُحوَّل خطياً إلى وزن البند. الفارغ والمعفى لا يدخلان الحساب،
+   وما لم يُرصد من تقييمات البند لا يُفترض له درجة: «المحصّل» يُنسب إلى ما رُصد فعلاً فقط. */
 function calc(c,sid){
   var sum=0,entered=0,total=0,parts={};
   c.comps.forEach(function(p){
     total+=p.worth;
-    var e=0,m=0;
-    p.items.forEach(function(it){var v=c.scores[sid+'|'+it.id];if(typeof v==='number'){e+=v;m+=it.max;}});
-    if(m>0){var pts=e/m*p.worth;parts[p.id]=pts;sum+=pts;entered+=p.worth;}else parts[p.id]=null;
+    var e=0,m=0,M=0;
+    p.items.forEach(function(it){M+=it.max;var v=c.scores[sid+'|'+it.id];if(typeof v==='number'){e+=v;m+=it.max;}});
+    if(m>0){var pts=e/M*p.worth;parts[p.id]=pts;sum+=pts;entered+=m/M*p.worth;}else parts[p.id]=null;
   });
   var pct=entered>0?sum/entered*100:null;
   return {parts:parts,sum:sum,entered:entered,total:total,pct:pct,
     /* لا يستطيع بلوغ النجاح حتى لو نال كل ما تبقّى */
-    cannotPass:entered>0&&(sum+(total-entered))<c.pass/100*total-1e-9};
+    cannotPass:entered>0&&(sum+(total-entered))<c.pass/100*total-1e-9,
+    complete:total-entered<1e-9};
 }
 function band(c,pct){
   if(pct===null)return '';
@@ -342,7 +352,7 @@ function totCell(c,sid){
   var r=calc(c,sid);
   if(r.pct===null)return '<span class="dim">—</span>';
   var bad=rnd(r.pct,c.decimals)<c.pass;
-  return '<span class="num'+(bad?' fail':'')+'">'+fmt(r.sum,c.decimals)+'</span> <span class="dim small">من</span> <span class="num'+(bad?' fail':'')+'">'+r.entered+'</span>';
+  return '<span class="num'+(bad?' fail':'')+'">'+fmt(r.sum,c.decimals)+'</span> <span class="dim small">من</span> <span class="num'+(bad?' fail':'')+'">'+trim0(r.entered)+'</span>';
 }
 function cellVal(v){return v==='x'?'ع':(typeof v==='number'?String(v):'');}
 
@@ -390,7 +400,7 @@ function vResults(c){
   var pcts=done.map(function(x){return x.r.pct;});
   var avg=pcts.reduce(function(a,b){return a+b;},0)/pcts.length;
   var passN=done.filter(function(x){return rnd(x.r.pct,c.decimals)>=c.pass;}).length;
-  var partial=done.some(function(x){return x.r.entered<tw;});
+  var partial=done.some(function(x){return !x.r.complete;});
   h+='<div class="sheet facts"><div><span class="small dim">متوسط الفصل</span><b class="num">'+fmt(avg,1)+'%</b></div>'+
      '<div><span class="small dim">الناجحون</span><b>'+passN+' من '+done.length+'</b></div>'+
      '<div><span class="small dim">أعلى نسبة</span><b class="num">'+fmt(Math.max.apply(null,pcts),1)+'%</b></div>'+
@@ -519,7 +529,7 @@ function csv(c){
     var r=calc(c,s.id);
     var row=[s.name].concat(items.map(function(x){return cellVal(c.scores[s.id+'|'+x.item.id]);}))
       .concat(c.comps.map(function(p){return r.parts[p.id]===null?'':trim0(r.parts[p.id]);}))
-      .concat(r.pct===null?['','','','']:[fmt(r.sum,c.decimals),r.entered,fmt(r.pct,c.decimals),band(c,r.pct)]);
+      .concat(r.pct===null?['','','','']:[fmt(r.sum,c.decimals),trim0(r.entered),fmt(r.pct,c.decimals),band(c,r.pct)]);
     lines.push(row.map(q).join(','));
   });
   /* علامة BOM ليقرأ إكسل الحروف العربية صحيحة */
