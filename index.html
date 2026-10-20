@@ -58,6 +58,7 @@ svg.ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;str
 .hd h2{font-size:20px;font-weight:700}
 .iconbtn{min-width:44px;min-height:44px;border-radius:14px;border:0;background:var(--green-soft);color:var(--green);display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 12px;font-weight:600;font-size:14px;flex:0 0 auto}
 .saved{font-size:12.5px;color:var(--green);font-weight:600}
+.clsbtn{border:1px solid var(--rule-strong);background:var(--sheet);border-radius:999px;padding:2px 12px;min-height:32px;font-size:13px;font-weight:600;color:var(--green);margin-top:2px}
 .saved.bad{color:var(--red)}
 
 /* عام */
@@ -318,7 +319,7 @@ table.k tbody tr:nth-child(even) td.ct{background:var(--tot-soft)} table.k tbody
    الدخول: يختار المعلم اسمه ويدخل رقمه السري (تُحفظ بصمته فقط).
    الحفظ: كل إدخال يُحفظ فوراً في قاعدة IndexedDB على الجهاز (وعند تعذّرها localStorage)، ولا يغادر الجهاز.
    الأعمال من ٤٠ بتوزيع كشف المتابعة، والتسميع عدد لا يدخل في المجموع، ولا تُقبل درجة تتجاوز حد عنصرها. */
-var WORKS=40, APPV='2026-10-21a';
+var WORKS=40, APPV='2026-10-21b';
 var DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 var MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var PER={'1':'الستة أسابيع الأولى','2':'الستة أسابيع الثانية'};
@@ -531,7 +532,7 @@ function vEmpty(){
 function vGrid(){
   ensureCur();
   var sb=sub(),ctx='',mode=S.cur,c=curComp(),pcls='p'+S.period,T=today();
-  var head=hd(sb.name,'الصف '+cn_(S.cls)+' · '+esc(teacher().name),'home','<button class="iconbtn" data-act="go" data-to="kashf" aria-label="الكشف">'+IC.sheet+'</button><button class="iconbtn" data-act="go" data-to="setup" aria-label="الإعدادات">'+IC.set+'</button>');
+  var head=hd(sb.name,'<button class="clsbtn" data-act="classes">الصف '+cn_(S.cls)+' ▾</button>','home','<button class="iconbtn" data-act="go" data-to="kashf" aria-label="الكشف">'+IC.sheet+'</button><button class="iconbtn" data-act="go" data-to="setup" aria-label="الإعدادات">'+IC.set+'</button>');
   if(!S.students.length)return head+subjSwitch()+vEmpty();
   if(mode==='file')ctx='<div class="ctx"><div class="ttl">'+IC.file+'ملفات الطلاب</div><p class="small dim">المس الطالب لفتح بطاقته في '+sb.short+'.</p></div>';
   else if(mode==='tas'){var t=curTas();ctx='<div class="ctx"><div class="ttl">'+IC.tas+sb.tasName+'<span class="pill">عدد فقط</span></div><div class="chips">'+sb.tas.map(function(x){return '<button class="chip" data-act="picktas" data-id="'+x.id+'" aria-pressed="'+(t&&x.id===t.id)+'">'+esc(x.name)+' · '+x.count+'</button>';}).join('')+'</div><div class="row"><p class="small dim">المس الطالب واختر ما سمّعه.</p><button class="chip" data-act="go" data-to="setup">تعديل العدد</button></div></div>';}
@@ -658,7 +659,7 @@ function render(keep){
 /* ---------- اللوحات ---------- */
 var POS=['ساعد زميله','مبادرة','التزام وانضباط','إجابة متميزة'],NEG=['تأخر عن الحصة','إزعاج أثناء الشرح','لم يُحضر أدواته','استخدام الهاتف'];
 var NEWSUBJ='both',PENDING=null;
-function layer(html){document.getElementById('layer').innerHTML='<div class="layer" data-act="shade"><div class="sheetp" role="dialog"><span class="grab"></span>'+html+'</div></div>';}
+function layer(html){var ot=document.getElementById('toast');if(ot)ot.remove();document.getElementById('layer').innerHTML='<div class="layer" data-act="shade"><div class="sheetp" role="dialog"><span class="grab"></span>'+html+'</div></div>';}
 function closeLayer(){document.getElementById('layer').innerHTML='';}
 function pinFields(a,b){return '<label class="small dim" for="'+a+'">الرقم السري (٤ أرقام)</label><input type="text" class="pin" id="'+a+'" inputmode="numeric" maxlength="4" autocomplete="off"><label class="small dim" for="'+b+'">أعد كتابة الرقم السري</label><input type="text" class="pin" id="'+b+'" inputmode="numeric" maxlength="4" autocomplete="off">';}
 function subjPicker(){return '<span class="small dim">المادة</span><div class="seg" role="group" aria-label="المادة">'+[['both','المادتان'],['isl','الإسلامية'],['qur','القرآن']].map(function(o){return '<button data-act="nsubj" data-v="'+o[0]+'" aria-pressed="'+(NEWSUBJ===o[0])+'">'+o[1]+'</button>';}).join('')+'</div>';}
@@ -732,6 +733,13 @@ function classSettingsSheet(cid){
   '<div>'+d.students.map(function(s,i){return '<div class="srow"><span class="i">'+(i+1)+'</span><input data-sname="'+s.id+'" data-cid="'+cid+'" value="'+esc(s.name)+'" aria-label="اسم الطالب"><button class="del" data-act="sdel" data-cid="'+cid+'" data-sid="'+s.id+'" aria-label="حذف الطالب">'+IC.trash+'</button></div>';}).join('')+'</div>'+
   '<textarea class="names" id="morenames" placeholder="أضف أسماء جديدة: اسم في كل سطر" style="min-height:90px"></textarea><button class="btn" data-act="addmore" data-cid="'+cid+'">إضافة الطلاب</button>'+
   '<button class="btn danger" data-act="clsdel" data-cid="'+cid+'" data-confirm="1">حذف هذا الصف وبياناته</button>');
+}
+/* قائمة صفوف المعلم: التنقل بينها وإضافة صف جديد من شاشة الرصد مباشرة */
+function classesSheet(){
+  var t=teacher(),k=klass();
+  layer('<div class="row"><h2>صفوفي</h2><button class="btn" data-act="closel">إغلاق</button></div>'+
+  '<div class="tlist">'+t.classes.map(function(c){var d=c.data;return '<button data-act="openc" data-cid="'+c.id+'" data-s="'+(d.subjects.some(function(x){return x.id===S.subj;})?S.subj:d.subjects[0].id)+'"'+(k&&c.id===k.id?' aria-current="true" style="border-color:var(--green)"':'')+'><span class="av">'+IC.file+'</span><span class="tx"><b>الصف '+cn_(d.cls)+'</b><br><span class="small dim"><span class="num">'+d.students.length+'</span> طالباً · '+d.subjects.map(function(x){return x.short;}).join(' و')+'</span></span>'+(k&&c.id===k.id?'<span class="pill">مفتوح</span>':'<span class="dim">←</span>')+'</button>';}).join('')+'</div>'+
+  '<button class="btn pri" data-act="newclass">+ صف جديد</button>');
 }
 function v1Sheet(){
   var list=v1Classes();
@@ -835,7 +843,8 @@ function onClick(ev){
   /* الصفوف */
   if(a==='home'){APP.ui='home';render();return true;}
   if(a==='go'){S.view=b.dataset.to;APP.ui='class';render();return true;}
-  if(a==='openc'){openClass(b.dataset.cid,b.dataset.s);render();return true;}
+  if(a==='openc'){closeLayer();openClass(b.dataset.cid,b.dataset.s);render();return true;}
+  if(a==='classes'){classesSheet();return false;}
   if(a==='clsset'){classSettingsSheet(b.dataset.cid);return false;}
   if(a==='clsdist'){closeLayer();openClass(b.dataset.cid);S.view='setup';render();return true;}
   if(a==='clsdel'){var t=teacher(),ix=t.classes.findIndex(function(x){return x.id===b.dataset.cid;}),gone=t.classes.splice(ix,1)[0];if(t.cid===gone.id&&t.classes.length)t.cid=t.classes[0].id;bind();closeLayer();APP.ui='home';render();
