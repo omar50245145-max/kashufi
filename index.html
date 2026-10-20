@@ -162,15 +162,19 @@ input.pin{direction:ltr;text-align:center;letter-spacing:10px;font-size:22px;fon
 .tile .fn{font-weight:700;font-size:15px}
 .tile .ln{font-size:12px;color:var(--ink-dim)}
 .tile .st{font-size:12.5px;font-weight:700;margin-top:3px}
-.tile .bd{direction:ltr;position:absolute;top:6px;inset-inline-start:6px;min-width:24px;height:22px;border-radius:999px;background:var(--green);color:var(--on-green);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 6px;font-variant-numeric:tabular-nums}
+.tile .bd{direction:ltr;position:absolute;top:6px;inset-inline-end:6px;min-width:24px;height:22px;border-radius:999px;background:var(--green);color:var(--on-green);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 6px;font-variant-numeric:tabular-nums}
 .tile.k-done{background:var(--green-soft);border-color:var(--green)} .tile.k-done .st{color:var(--green)}
 .tile.k-part{background:var(--amber-soft);border-color:var(--amber)} .tile.k-part .st{color:var(--amber)}
 .tile.k-miss{background:var(--red-soft);border-color:var(--red)} .tile.k-miss .st{color:var(--red)}
 .tile.k-full{background:var(--green-soft);border-color:var(--green)} .tile.k-full .st{color:var(--green)}
 .tile.quiet{border:2px dashed var(--amber)}
-.tile.minus{border-color:var(--red)}
-.ctx.minus{box-shadow:0 0 0 2px var(--red)}
-.seg.dir button[aria-pressed=true][data-v="-"]{color:var(--red)}
+.tile{cursor:pointer}
+.tile.sel{border-color:var(--green);box-shadow:0 0 0 2px var(--green);z-index:1}
+.pmrow{display:flex;gap:6px;width:100%;margin-top:6px;direction:ltr}
+.pm{flex:1;min-height:44px;border-radius:12px;border:0;font-size:24px;font-weight:700;line-height:1}
+.pm.plus{background:var(--green);color:var(--on-green)}
+.pm.minus{background:var(--red-soft);color:var(--red)}
+.pm.off{opacity:.35}
 .tile.faded{opacity:.35}
 .tile .p{color:var(--green)} .tile .n{color:var(--red)}
 .tile.pulse{animation:pulse .3s ease}
@@ -319,7 +323,7 @@ table.k tbody tr:nth-child(even) td.ct{background:var(--tot-soft)} table.k tbody
    الدخول: يختار المعلم اسمه ويدخل رقمه السري (تُحفظ بصمته فقط).
    الحفظ: كل إدخال يُحفظ فوراً في قاعدة IndexedDB على الجهاز (وعند تعذّرها localStorage)، ولا يغادر الجهاز.
    الأعمال من ٤٠ بتوزيع كشف المتابعة، والتسميع عدد لا يدخل في المجموع، ولا تُقبل درجة تتجاوز حد عنصرها. */
-var WORKS=40, APPV='2026-10-21b';
+var WORKS=40, APPV='2026-10-21c';
 var DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 var MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var PER={'1':'الستة أسابيع الأولى','2':'الستة أسابيع الثانية'};
@@ -536,10 +540,9 @@ function vGrid(){
   if(!S.students.length)return head+subjSwitch()+vEmpty();
   if(mode==='file')ctx='<div class="ctx"><div class="ttl">'+IC.file+'ملفات الطلاب</div><p class="small dim">المس الطالب لفتح بطاقته في '+sb.short+'.</p></div>';
   else if(mode==='tas'){var t=curTas();ctx='<div class="ctx"><div class="ttl">'+IC.tas+sb.tasName+'<span class="pill">عدد فقط</span></div><div class="chips">'+sb.tas.map(function(x){return '<button class="chip" data-act="picktas" data-id="'+x.id+'" aria-pressed="'+(t&&x.id===t.id)+'">'+esc(x.name)+' · '+x.count+'</button>';}).join('')+'</div><div class="row"><p class="small dim">المس الطالب واختر ما سمّعه.</p><button class="chip" data-act="go" data-to="setup">تعديل العدد</button></div></div>';}
-  else if(c.kind==='count'||c.kind==='beh'){var minus=S.dir==='-';
-    ctx='<div class="ctx'+(minus?' minus':'')+'"><div class="ttl">'+IC[c.kind]+esc(c.name)+'<span class="pill '+pcls+'">من '+c.mark+'</span></div>'+
-      '<div class="seg dir" role="group" aria-label="زيادة أو إنقاص"><button data-act="dir" data-v="+" aria-pressed="'+!minus+'">زيادة +</button><button data-act="dir" data-v="-" aria-pressed="'+minus+'">إنقاص −</button></div>'+
-      '<p class="small dim">'+(minus?'كل لمسة تُنقص '+c.per+'، ولا تنزل عن الصفر.':'كل لمسة تزيد '+c.per+'، وتتوقف عند '+c.mark+'.')+'</p>'+
+  else if(c.kind==='count'||c.kind==='beh'){
+    ctx='<div class="ctx"><div class="ttl">'+IC[c.kind]+esc(c.name)+'<span class="pill '+pcls+'">من '+c.mark+'</span></div>'+
+      '<p class="small dim">اختر الطالب، ثم اضغط <b>+</b> أو <b>−</b> داخل مربعه. كل ضغطة '+c.per+'، من صفر إلى '+c.mark+'.</p>'+
       (c.kind==='count'?'<button class="chip'+(S.quietOnly?' warn':'')+'" data-act="quiet" style="align-self:flex-start">لم يشاركوا هذا الأسبوع (<span class="num">'+quietList(c).length+'</span>)</button>':'')+'</div>';}
   else{
     var it=curItem(c),many=c.kind==='hand'||c.items.length>1;
@@ -552,7 +555,9 @@ function vGrid(){
     var cls='tile',bd='',st='';
     if(mode==='file'){st='<span class="st"><span class="num">'+r1(gradeOf(sb,s.id))+'</span> <span class="dim">/ 40</span></span>';}
     else if(mode==='tas'){var t=curTas(),n=tasDone(t,s.id);if(n===t.count)cls+=' k-full';st='<span class="st">سمّع <span class="num">'+n+'</span></span>';}
-    else if(c.kind==='count'||c.kind==='beh'){var k=evs(s.id,c.id,T).reduce(function(a,x){return a+(x.d||0);},0),g=compGrade(c,s.id)||0;if(k)bd='<span class="bd">'+(k>0?'+':'−')+Math.abs(k)+'</span>';if(g>=c.mark)cls+=' k-full';if(S.dir==='-')cls+=' minus';st='<span class="st"><span class="num">'+r1(g)+' / '+c.mark+'</span></span>';if(c.kind==='count'&&S.quietOnly)cls+=qs.indexOf(s)>=0?' quiet':' faded';}
+    else if(c.kind==='count'||c.kind==='beh'){var k=evs(s.id,c.id,T).reduce(function(a,x){return a+(x.d||0);},0),g=compGrade(c,s.id)||0;if(k)bd='<span class="bd">'+(k>0?'+':'−')+Math.abs(k)+'</span>';if(g>=c.mark)cls+=' k-full';st='<span class="st"><span class="num">'+r1(g)+' / '+c.mark+'</span></span>';if(c.kind==='count'&&S.quietOnly)cls+=qs.indexOf(s)>=0?' quiet':' faded';
+      if(S.pick===s.id){cls+=' sel';st+='<span class="pmrow"><button class="pm minus'+(g<=0?' off':'')+'" data-act="inc" data-d="-1" data-sid="'+s.id+'" aria-label="إنقاص">−</button><button class="pm plus'+(g>=c.mark?' off':'')+'" data-act="inc" data-d="1" data-sid="'+s.id+'" aria-label="زيادة">+</button></span>';}
+      return '<div class="'+cls+'" data-act="pick-s" data-sid="'+s.id+'" id="t-'+s.id+'" role="button" tabindex="0">'+bd+'<span class="fn">'+esc(first(s.name))+'</span><span class="ln">'+esc(rest(s.name))+'</span>'+st+'</div>';}
     else{var it2=curItem(c),v=it2?(S.vals[it2.id]||{})[s.id]:undefined;
       if(c.kind==='hand'&&v){cls+=' k-'+v;st='<span class="st">'+({done:'سلّم ✓',part:'ناقص',miss:'لم يسلّم'})[v]+'</span>';}
       if(c.kind==='score')st='<span class="st">'+(v===undefined?'<span class="dim">—</span>':v==='غ'?'<span class="n">غائب</span>':'<span class="num">'+v+'</span>')+'</span>';}
@@ -857,10 +862,15 @@ function onClick(ev){
   if(a==='addnames'){var lines=names(document.getElementById('names').value);if(!lines.length){refuse('اكتب اسماً واحداً على الأقل');return false;}
     lines.forEach(function(n){S.students.push({id:uid(),name:n});});render();toast('أُضيف '+lines.length+' طالباً');return true;}
   if(a==='subj'){var keepIdx=comps(S.period).indexOf(curComp());S.subj=b.dataset.id;if(S.cur!=='tas'&&S.cur!=='file'){var l=comps(S.period);S.cur=l.length?(l[keepIdx]||l[0]).id:'tas';}render(true);return true;}
-  if(a==='per'){S.period=b.dataset.p;S.cur=null;S.quietOnly=false;S.dir='+';ensureCur();render(true);return true;}
-  if(a==='tab'){S.cur=b.dataset.id;S.quietOnly=false;S.dir='+';S.view='grid';render();return true;}
+  if(a==='per'){S.period=b.dataset.p;S.cur=null;S.quietOnly=false;S.pick=null;ensureCur();render(true);return true;}
+  if(a==='tab'){S.cur=b.dataset.id;S.quietOnly=false;S.pick=null;S.view='grid';render();return true;}
   if(a==='quiet'){S.quietOnly=!S.quietOnly;render(true);return true;}
-  if(a==='dir'){S.dir=b.dataset.v;render(true);return true;}
+  if(a==='pick-s'){S.pick=S.pick===b.dataset.sid?null:b.dataset.sid;render(true);return false;}
+  if(a==='inc'){var ci=curComp(),sid1=b.dataset.sid,s1=stu(sid1),g1=compGrade(ci,sid1)||0,dn1=b.dataset.d==='-1';
+    if(!dn1&&g1>=ci.mark){refuse('لا تُقبل زيادة: '+esc(first(s1.name))+' أخذ درجة '+esc(ci.name)+' كاملة ('+ci.mark+')',sid1);return false;}
+    if(dn1&&g1<=0){refuse('لا يُقبل إنقاص: درجة '+esc(first(s1.name))+' في '+esc(ci.name)+' صفر',sid1);return false;}
+    var e1={id:uid(),cid:ci.id,date:today(),sid:sid1,d:dn1?-1:1};S.events.push(e1);S.pick=sid1;render(true);pulse(sid1);
+    toast((dn1?'−':'+')+ci.per+' '+esc(ci.name)+' · '+esc(first(s1.name))+' — '+r1(compGrade(ci,sid1))+' من '+ci.mark,function(){S.events=S.events.filter(function(x){return x.id!==e1.id;});});return true;}
   if(a==='pick'){if(S.sel[S.cur]===b.dataset.id||(b.getAttribute('aria-pressed')==='true')){S.sel[S.cur]=b.dataset.id;itemSheet();return true;}S.sel[S.cur]=b.dataset.id;render(true);return true;}
   if(a==='picktas'){S.sel['tas-'+sub().id]=b.dataset.id;render(true);return true;}
   if(a==='newitem'){newItemSheet();return false;}
@@ -873,7 +883,8 @@ function onClick(ev){
     if(S.cur==='file'){S.sid=sid;S.view='card';render();return true;}
     if(S.cur==='tas'){tasSheet(sid);return false;}
     var c=curComp();
-    if(c.kind==='count'||c.kind==='beh'){var g=compGrade(c,sid)||0,dn=S.dir==='-';
+    if(c.kind==='count'||c.kind==='beh'){S.pick=sid;render(true);return false;}
+    if(false){var g,dn;
       if(!dn&&g>=c.mark){refuse('لا تُقبل زيادة: '+esc(first(s.name))+' أخذ درجة '+esc(c.name)+' كاملة ('+c.mark+')',sid);return false;}
       if(dn&&g<=0){refuse('لا يُقبل إنقاص: درجة '+esc(first(s.name))+' في '+esc(c.name)+' صفر',sid);return false;}
       var e={id:uid(),cid:c.id,date:today(),sid:sid,d:dn?-1:1};S.events.push(e);render(true);pulse(sid);
