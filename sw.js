@@ -1,6 +1,6 @@
 /* كشوفي — عامل الخدمة: يحفظ ملفات البرنامج ليعمل دون إنترنت.
    غيّر رقم الإصدار V مع كل تحديث للبرنامج حتى يصل التحديث للمعلمين. */
-var V='kashufi-2026-10-20c';
+var V='kashufi-2026-10-21a';
 var FILES=[
     './',
     'index.html',
@@ -24,8 +24,8 @@ var FILES=[
 ];
 self.addEventListener('install',function(e){
   e.waitUntil(caches.open(V).then(function(c){return c.addAll(FILES);}).then(function(){
-    /* أول تثبيت يعمل فوراً؛ أما التحديث فينتظر موافقة المعلم من داخل البرنامج */
-    return self.registration.active?null:self.skipWaiting();
+    /* النسخة الجديدة تعمل فوراً دون انتظار إغلاق البرنامج */
+    return self.skipWaiting();
   }));
 });
 self.addEventListener('activate',function(e){

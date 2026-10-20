@@ -318,7 +318,7 @@ table.k tbody tr:nth-child(even) td.ct{background:var(--tot-soft)} table.k tbody
    الدخول: يختار المعلم اسمه ويدخل رقمه السري (تُحفظ بصمته فقط).
    الحفظ: كل إدخال يُحفظ فوراً في قاعدة IndexedDB على الجهاز (وعند تعذّرها localStorage)، ولا يغادر الجهاز.
    الأعمال من ٤٠ بتوزيع كشف المتابعة، والتسميع عدد لا يدخل في المجموع، ولا تُقبل درجة تتجاوز حد عنصرها. */
-var WORKS=40;
+var WORKS=40, APPV='2026-10-21a';
 var DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 var MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var PER={'1':'الستة أسابيع الأولى','2':'الستة أسابيع الثانية'};
@@ -478,7 +478,7 @@ function vLogin(){
   return '<div class="login"><div class="brand"><h1>كشوفي</h1><span class="small dim">'+(APP.teachers.length?'اختر اسمك ثم أدخل رقمك السري':'رصد الأعمال والمشاركة والسلوك والتسميع')+'</span></div>'+inst+list+
   '<button class="btn '+(APP.teachers.length?'dash':'pri')+'" data-act="newteacher">+ '+(APP.teachers.length?'معلم جديد':'إنشاء حسابي')+'</button>'+
   '<button class="btn" data-act="restore">استرجاع حساب من نسخة احتياطية</button>'+
-  '<p class="small dim" style="text-align:center">كل حساب بياناته مستقلة، وتُحفظ على هذا الجهاز فقط.<br><a href="v1/" style="color:var(--green)">الإصدار الأول (دفتر رصد الدرجات)</a></p></div>';
+  '<p class="small dim" style="text-align:center">كل حساب بياناته مستقلة، وتُحفظ على هذا الجهاز فقط.<br><a href="v1/" style="color:var(--green)">الإصدار الأول (دفتر رصد الدرجات)</a><br><span class="num">الإصدار '+APPV+'</span></p></div>';
 }
 function vPin(){
   var t=APP.teachers.filter(function(x){return x.id===PIN.tid;})[0],d='';
@@ -943,15 +943,29 @@ window.addEventListener('afterprint',fitPaper);
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
 loadAll().then(function(list){APP.teachers=(list||[]).filter(function(t){return t&&t.id&&t.pin;}).map(migrate).sort(function(a,b){return (a.createdAt||0)-(b.createdAt||0);});APP.ui='login';render();});
 
-/* العمل دون إنترنت: عامل الخدمة يحفظ ملفات البرنامج، ويُعلن عن التحديثات */
-var UPDATING=false;
+/* العمل دون إنترنت: عامل الخدمة يحفظ ملفات البرنامج.
+   التحديث: النسخة الجديدة تُثبَّت في الخلفية وتعمل فوراً؛ تُعاد الصفحة تلقائياً إن كان المعلم في شاشة الدخول،
+   وإلا يظهر شريط ثابت «تحديث جاهز» حتى لا يُقطع عليه الرصد. البيانات محفوظة في كل الأحوال. */
+var UPDATE_READY=false;
+function updateBar(){
+  if(document.getElementById('updbar'))return;
+  var d=document.createElement('div');d.id='updbar';d.className='toast low';d.style.zIndex='45';d.style.top='calc(8px + env(safe-area-inset-top,0px))';d.style.bottom='auto';
+  d.innerHTML='<span>نسخة جديدة من كشوفي جاهزة</span><button>تحديث الآن</button>';
+  d.querySelector('button').onclick=function(){location.reload();};
+  document.getElementById('dev').appendChild(d);
+}
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  navigator.serviceWorker.register('sw.js').then(function(reg){
-    reg.addEventListener('updatefound',function(){var nw=reg.installing;if(!nw)return;nw.addEventListener('statechange',function(){
-      if(nw.state==='installed'&&navigator.serviceWorker.controller){toast('يتوفر تحديث جديد للبرنامج',null);var t=document.getElementById('toast');if(t){var bt=document.createElement('button');bt.textContent='تحديث الآن';bt.onclick=function(){UPDATING=true;nw.postMessage('skip');};t.appendChild(bt);}}});});
+  var hadController=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(reg){
+    reg.update().catch(function(){});
+    /* عند العودة إلى البرنامج من الخلفية يُفحص التحديث مرة أخرى */
+    document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')reg.update().catch(function(){});});
   }).catch(function(){});
-  /* لا تُعاد الصفحة إلا إذا طلب المعلم التحديث بنفسه، حتى لا يخرج من حسابه أثناء العمل */
-  navigator.serviceWorker.addEventListener('controllerchange',function(){if(!UPDATING)return;UPDATING=false;location.reload();});
+  navigator.serviceWorker.addEventListener('controllerchange',function(){
+    if(!hadController){hadController=true;return;}
+    if(UPDATE_READY)return;UPDATE_READY=true;
+    if(APP.ui==='login'||APP.ui==='loading'||APP.ui==='pin')location.reload();else updateBar();
+  });
 }
 </script>
 </body>
