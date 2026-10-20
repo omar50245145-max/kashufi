@@ -162,7 +162,7 @@ input.pin{direction:ltr;text-align:center;letter-spacing:10px;font-size:22px;fon
 .tile .fn{font-weight:700;font-size:15px}
 .tile .ln{font-size:12px;color:var(--ink-dim)}
 .tile .st{font-size:12.5px;font-weight:700;margin-top:3px}
-.tile .bd{direction:ltr;position:absolute;top:6px;inset-inline-end:6px;min-width:24px;height:22px;border-radius:999px;background:var(--green);color:var(--on-green);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 6px;font-variant-numeric:tabular-nums}
+.tile .bd{direction:ltr;position:absolute;top:-8px;left:-4px;box-shadow:0 0 0 2px var(--paper);z-index:2;min-width:24px;height:22px;border-radius:999px;background:var(--green);color:var(--on-green);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 6px;font-variant-numeric:tabular-nums}
 .tile.k-done{background:var(--green-soft);border-color:var(--green)} .tile.k-done .st{color:var(--green)}
 .tile.k-part{background:var(--amber-soft);border-color:var(--amber)} .tile.k-part .st{color:var(--amber)}
 .tile.k-miss{background:var(--red-soft);border-color:var(--red)} .tile.k-miss .st{color:var(--red)}
@@ -323,7 +323,7 @@ table.k tbody tr:nth-child(even) td.ct{background:var(--tot-soft)} table.k tbody
    الدخول: يختار المعلم اسمه ويدخل رقمه السري (تُحفظ بصمته فقط).
    الحفظ: كل إدخال يُحفظ فوراً في قاعدة IndexedDB على الجهاز (وعند تعذّرها localStorage)، ولا يغادر الجهاز.
    الأعمال من ٤٠ بتوزيع كشف المتابعة، والتسميع عدد لا يدخل في المجموع، ولا تُقبل درجة تتجاوز حد عنصرها. */
-var WORKS=40, APPV='2026-10-21c';
+var WORKS=40, APPV='2026-10-21d';
 var DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 var MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var PER={'1':'الستة أسابيع الأولى','2':'الستة أسابيع الثانية'};
