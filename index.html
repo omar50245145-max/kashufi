@@ -350,7 +350,7 @@ table.k tbody tr:nth-child(even) td.ct{background:var(--tot-soft)} table.k tbody
    الدخول: يختار المعلم اسمه ويدخل رقمه السري (تُحفظ بصمته فقط).
    الحفظ: كل إدخال يُحفظ فوراً في قاعدة IndexedDB على الجهاز (وعند تعذّرها localStorage)، ولا يغادر الجهاز.
    الأعمال من ٤٠ بتوزيع كشف المتابعة، والتسميع عدد لا يدخل في المجموع، ولا تُقبل درجة تتجاوز حد عنصرها. */
-var WORKS=40, APPV='2026-10-21g';
+var WORKS=40, APPV='2026-10-21h';
 var DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 var MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var PER={'1':'الستة أسابيع الأولى','2':'الستة أسابيع الثانية'};
@@ -1053,6 +1053,21 @@ function onClick(ev){
 }
 /* بعد كل عملية تغيّر البيانات يُحفظ حساب المعلم الحالي فوراً */
 document.addEventListener('click',function(ev){var changed=onClick(ev);if(changed&&APP.tid)persistTeacher(teacher());});
+/* منع تكبير اللمس المزدوج في آيفون (سفاري يتجاهل أحياناً touch-action):
+   إذا جاءت لمسة ثانية ثابتة خلال ٣٥٠ مللي ثانية من الأولى أُلغي سلوكها الافتراضي (التكبير)، ونُفّذ زرها يدوياً
+   حتى يبقى الضغط السريع المتكرر على + و − يعمل. السحب والتمرير وخانات الكتابة لا تتأثر */
+var TAP={t:0,x:0,y:0};
+document.addEventListener('touchstart',function(ev){var p=ev.touches[0];if(p){TAP.x=p.clientX;TAP.y=p.clientY;}},{passive:true});
+document.addEventListener('touchend',function(ev){
+  var now=Date.now(),p=ev.changedTouches[0],t=ev.target,still=p&&Math.abs(p.clientX-TAP.x)<10&&Math.abs(p.clientY-TAP.y)<10;
+  if(!still||ev.touches.length){TAP.t=0;return;}
+  if(now-TAP.t<350&&t.closest&&!t.closest('input,textarea,select')){
+    ev.preventDefault();
+    var b=t.closest('button,a,label,[data-act]');
+    if(b&&!b.disabled&&!(b.dataset&&b.dataset.act==='shade'&&b!==t))b.click();
+    TAP.t=now;return;}
+  TAP.t=now;
+},{passive:false});
 document.addEventListener('input',function(ev){
   var t=ev.target;if(!t.dataset)return;
   if(t.classList.contains('pin')){t.value=normDigits(t.value).replace(/\D/g,'').slice(0,4);return;}
