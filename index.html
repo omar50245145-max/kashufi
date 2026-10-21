@@ -138,6 +138,12 @@ input.pin{direction:ltr;text-align:center;letter-spacing:10px;font-size:22px;fon
 .cname:focus{border-bottom-color:var(--green);outline:none}
 .del{min-width:42px;min-height:42px;border:0;border-radius:12px;background:transparent;color:var(--ink-dim);display:inline-flex;align-items:center;justify-content:center}
 .del.armed{background:var(--red);color:#fff}
+.ilist{display:flex;flex-direction:column;gap:8px;border-top:1px dashed var(--rule-strong);padding-top:10px}
+.irow{display:flex;align-items:center;gap:6px}
+.iname{flex:1;min-width:0;border:0;border-bottom:1.5px solid var(--rule-strong);background:transparent;padding:4px 2px;font-size:16px;min-height:40px;border-radius:0}
+.iname:focus{border-bottom-color:var(--green);outline:none}
+.irow .step span{min-width:40px;width:44px}
+.irow .step button{min-width:36px}
 .kdesc{font-size:12.5px;color:var(--ink-dim);margin-top:-4px}
 .step{display:inline-flex;align-items:center;border:1px solid var(--rule-strong);border-radius:12px;overflow:hidden;direction:ltr;flex:0 0 auto}
 .step button{min-width:42px;min-height:40px;border:0;background:var(--raise);font-size:20px;font-weight:600;color:var(--green)}
@@ -350,7 +356,7 @@ table.k tbody tr:nth-child(even) td.ct{background:var(--tot-soft)} table.k tbody
    الدخول: يختار المعلم اسمه ويدخل رقمه السري (تُحفظ بصمته فقط).
    الحفظ: كل إدخال يُحفظ فوراً في قاعدة IndexedDB على الجهاز (وعند تعذّرها localStorage)، ولا يغادر الجهاز.
    الأعمال من ٤٠ بتوزيع كشف المتابعة، والتسميع عدد لا يدخل في المجموع، ولا تُقبل درجة تتجاوز حد عنصرها. */
-var WORKS=40, APPV='2026-10-21h';
+var WORKS=40, APPV='2026-10-21i';
 var DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 var MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var PER={'1':'الستة أسابيع الأولى','2':'الستة أسابيع الثانية'};
@@ -536,7 +542,12 @@ function compCard(c,cls){
   var seg='<div class="seg" role="group" aria-label="طريقة الرصد">'+Object.keys(KINDS).map(function(k){return '<button data-act="kind" data-id="'+c.id+'" data-k="'+k+'" aria-pressed="'+(c.kind===k)+'">'+KINDS[k].l+'</button>';}).join('')+'</div>';
   var extra='',room=WORKS-worksSum();
   if(c.kind==='count'||c.kind==='beh')extra='<div class="row"><span class="small">قيمة كل لمسة</span>'+stepper('per',c.id,c.per)+'</div><p class="small dim">يبدأ من صفر، وتكتمل الدرجة بعد <span class="num">'+Math.ceil(c.mark/c.per)+'</span> لمسات، ولا تُقبل زيادة بعدها ولا إنقاص تحت الصفر.</p>';
-  else if(c.kind==='score'&&c.items.length)extra='<p class="small dim">'+c.items.map(function(it){return esc(it.name)+' من '+it.max;}).join(' · ')+'</p>';
+  else if(c.kind==='hand'||c.kind==='score'){var hw=c.kind==='hand';
+    extra='<div class="ilist"><div class="row"><b>'+(hw?'الواجبات':'التقييمات')+'</b><span class="small dim">العدد <span class="num">'+c.items.length+'</span>'+(c.items.length>1?' · يُحسب متوسطها':'')+'</span></div>'+
+      c.items.map(function(it){return '<div class="irow"><input class="iname" data-itn="'+it.id+'" data-cid="'+c.id+'" value="'+esc(it.name)+'" aria-label="اسم '+(hw?'الواجب':'التقييم')+'">'+
+        (hw?'':'<span class="small dim">من</span>'+stepper('imx',it.id,it.max))+
+        '<button class="del" data-act="delit" data-cid="'+c.id+'" data-id="'+it.id+'" aria-label="حذف '+esc(it.name)+'">'+IC.trash+'</button></div>';}).join('')+
+      '<button class="btn dash" data-act="addit" data-cid="'+c.id+'">+ '+(hw?'واجب جديد':'تقييم جديد')+'</button></div>';}
   return '<div class="comp '+cls+'"><div class="row"><input class="cname" id="n-'+c.id+'" data-cname="'+c.id+'" value="'+esc(c.name)+'" aria-label="اسم العنصر"><button class="del" data-act="delcomp" data-id="'+c.id+'" aria-label="حذف العنصر">'+IC.trash+'</button></div>'+
     seg+'<p class="kdesc">'+KINDS[c.kind].d+'</p><div class="row"><b>الدرجة</b>'+stepper('mark',c.id,c.mark,room>=.5)+'</div>'+extra+'</div>';
 }
@@ -561,11 +572,11 @@ function vEmpty(){
   return '<div class="card"><b>أضف طلاب الصف '+cn_(S.cls)+'</b><p class="small dim">اكتب اسماً في كل سطر، أو الصق القائمة من ملف إكسل.</p><textarea class="names" id="names" placeholder="عبدالله أحمد&#10;محمد سالم&#10;..."></textarea><button class="btn pri" data-act="addnames">إضافة الطلاب</button></div>';
 }
 function vGrid(){
-  ensureCur();
+  S.cur='file';
   var sb=sub(),ctx='',mode=S.cur,c=curComp(),pcls='p'+S.period,T=today();
-  var head=hd(sb.name,'<button class="clsbtn" data-act="classes">الصف '+cn_(S.cls)+' ▾</button>','home','<button class="iconbtn" data-act="go" data-to="kashf" aria-label="الكشف">'+IC.sheet+'</button><button class="iconbtn" data-act="go" data-to="setup" aria-label="الإعدادات">'+IC.set+'</button>');
+  var head=hd(sb.name,'<button class="clsbtn" data-act="classes">الصف '+cn_(S.cls)+' ▾</button>','home','<button class="iconbtn" data-act="go" data-to="kashf" aria-label="الكشف">'+IC.sheet+'</button>');
   if(!S.students.length)return head+subjSwitch()+vEmpty();
-  if(mode==='file')ctx='<div class="ctx"><div class="ttl">'+IC.file+'ملفات الطلاب</div><p class="small dim">المس الطالب لرصد كل بنوده في '+sb.short+' من لوحة واحدة.</p></div>';
+  if(mode==='file')ctx='<div class="ctx"><div class="row"><p class="small dim">المس الطالب لرصد كل بنوده في '+sb.short+'.</p><button class="chip" data-act="clsset" data-cid="'+teacher().cid+'">تعديل الأسماء</button></div></div>';
   else if(mode==='tas'){var t=curTas();ctx='<div class="ctx"><div class="ttl">'+IC.tas+sb.tasName+'<span class="pill">عدد فقط</span></div><div class="chips">'+sb.tas.map(function(x){return '<button class="chip" data-act="picktas" data-id="'+x.id+'" aria-pressed="'+(t&&x.id===t.id)+'">'+esc(x.name)+' · '+x.count+'</button>';}).join('')+'</div><div class="row"><p class="small dim">المس الطالب لتظهر كل بنوده.</p><button class="chip" data-act="go" data-to="setup">تعديل العدد</button></div></div>';}
   else if(c.kind==='count'||c.kind==='beh'){
     ctx='<div class="ctx"><div class="ttl">'+IC[c.kind]+esc(c.name)+'<span class="pill '+pcls+'">من '+c.mark+'</span></div>'+
@@ -671,12 +682,12 @@ function vPdf(){
 function fitPaper(){var w=document.getElementById('pw');if(!w)return;var p=w.firstChild,W=p.classList.contains('land')?1123:794,k=w.clientWidth/W;p.style.transform='scale('+k+')';w.style.height=(p.offsetHeight*k)+'px';}
 function tabbar(){
   var el=document.getElementById('tabs');
-  if(APP.ui!=='class'||!S||['grid','entry','card'].indexOf(S.view)<0||!S.students.length){el.hidden=true;return;}
+  /* زرّان فقط: «الطلاب» للرصد من لوحة كل طالب، و«الإعدادات» لضبط البنود والواجبات والمشاريع والتسميع */
+  if(APP.ui!=='class'||!S||['grid','card','setup'].indexOf(S.view)<0){el.hidden=true;return;}
   el.hidden=false;
-  var cur=S.view==='card'?'file':S.cur,sb=sub();
-  el.innerHTML='<div class="in">'+comps(S.period).map(function(c){return '<button data-act="tab" data-id="'+c.id+'" aria-pressed="'+(cur===c.id)+'">'+IC[c.kind]+'<span>'+esc(c.name)+'</span></button>';}).join('')+
-    '<span class="sep"></span><button data-act="tab" data-id="tas" aria-pressed="'+(cur==='tas')+'">'+IC.tas+'<span>'+(sb.unit==='آية'?'الآيات':'الأحاديث')+'</span></button>'+
-    '<button data-act="tab" data-id="file" aria-pressed="'+(cur==='file')+'">'+IC.file+'<span>الطلاب</span></button></div>';
+  var set=S.view==='setup';
+  el.innerHTML='<div class="in"><button data-act="tab" data-id="file" aria-pressed="'+(!set)+'">'+IC.file+'<span>الطلاب</span></button>'+
+    '<button data-act="go" data-to="setup" aria-pressed="'+set+'">'+IC.set+'<span>الإعدادات</span></button></div>';
 }
 function render(keep){
   var sc=document.getElementById('scr'),y=sc.scrollTop;
@@ -861,7 +872,7 @@ function putScore(v){
   vals[s.id]=v;S.ent.half=false;S.ent.buf='';S.ent.idx=nextBlank(vals,S.ent.idx+1);render(false);
 }
 function refreshUnits(sid){var set=S.tv[curTas().id][sid]||[];document.querySelectorAll('#units button').forEach(function(b){b.setAttribute('aria-pressed',set.indexOf(Number(b.dataset.u))>=0);});var c=document.getElementById('tcnt');if(c)c.textContent=set.length;}
-function openClass(cid,subj){var t=teacher();t.cid=cid;bind();if(subj)S.subj=subj;S.view='grid';APP.ui='class';ensureCur();}
+function openClass(cid,subj){var t=teacher();t.cid=cid;bind();if(subj)S.subj=subj;S.view='grid';APP.ui='class';S.cur='file';}
 function names(text){return String(text||'').split(/\n|\t|\r/).map(function(x){return x.replace(/^\s*\d+[\.\-\)]?\s*/,'').trim();}).filter(Boolean);}
 function readPins(a,b){var p1=normDigits(document.getElementById(a).value),p2=normDigits(document.getElementById(b).value);if(!/^\d{4}$/.test(p1)){refuse('الرقم السري ٤ أرقام');return null;}if(p1!==p2){refuse('الرقمان غير متطابقين');return null;}return p1;}
 
@@ -1034,6 +1045,7 @@ function onClick(ev){
     else if(key==='bstep')cc.step=Math.max(0,r1(cc.step+d*.5));
     else if(key==='tcount'){var tq=tasById(b.dataset.id);tq.count=Math.min(300,Math.max(1,tq.count+d));}
     else if(key==='imax'){S.newMax=Math.max(.5,r1(S.newMax+d*(S.newMax<5?.5:1)));b.parentNode.querySelector('span').textContent=S.newMax;return false;}
+    else if(key==='imx'){var im2=null;S.subjects.forEach(function(sb){sb.comps.forEach(function(c){c.items.forEach(function(x){if(x.id===b.dataset.id)im2=x;});});});if(!im2)return false;im2.max=Math.max(.5,r1(im2.max+d*(im2.max<5?.5:1)));}
     else if(key==='itmax'){var ci=curComp(),im=curItem(ci);im.max=Math.max(.5,r1(im.max+d*(im.max<5?.5:1)));b.parentNode.querySelector('span').textContent=im.max;return true;}
     else if(key==='ncount'){S.newCount=Math.max(1,S.newCount+d);b.parentNode.querySelector('span').textContent=S.newCount;return false;}
     render(true);return true;
@@ -1043,6 +1055,11 @@ function onClick(ev){
     var p=b.dataset.p,sbz=sub(),ncm={id:uid(),name:'عنصر جديد',mark:.5,kind:'score',period:p,items:[],per:1,step:.5},it4={id:uid(),name:'عنصر جديد',max:10,date:today()};ncm.items.push(it4);S.vals[it4.id]={};
     var lastIx=-1;sbz.comps.forEach(function(c,i){if(c.period===p)lastIx=i;});sbz.comps.splice(lastIx+1,0,ncm);render(true);
     var inp=document.getElementById('n-'+ncm.id);if(inp){inp.scrollIntoView({block:'center'});inp.focus();inp.select();}return true;}
+  if(a==='addit'){var ca=compById(b.dataset.cid),na=ca.items.length+1,last=ca.items[ca.items.length-1];
+    var ni2={id:uid(),name:ca.kind==='hand'?'واجب '+na:ca.name+' '+na,max:ca.kind==='score'?(last?last.max:(ca.mark||10)):0,date:today()};
+    ca.items.push(ni2);S.vals[ni2.id]={};S.sel[ca.id]=ni2.id;render(true);toast('أُضيف «'+esc(ni2.name)+'»');return true;}
+  if(a==='delit'){var cdl=compById(b.dataset.cid),idl=cdl.items.findIndex(function(x){return x.id===b.dataset.id;});if(idl<0)return false;var gi=cdl.items.splice(idl,1)[0];if(S.sel[cdl.id]===gi.id)delete S.sel[cdl.id];render(true);
+    toast('حُذف «'+esc(gi.name)+'» ودرجاته',function(){cdl.items.splice(idl,0,gi);});return true;}
   if(a==='delcomp'){var sbd=sub(),di=sbd.comps.findIndex(function(x){return x.id===b.dataset.id;}),gc=sbd.comps.splice(di,1)[0];render(true);toast('حُذف «'+esc(gc.name)+'»',function(){sbd.comps.splice(di,0,gc);});return true;}
   if(a==='addtas'){newTasSheet();return false;}
   if(a==='deltas'){var sbt=sub();if(sbt.tas.length<2){refuse('يلزم مقطع واحد على الأقل');return false;}var ti=sbt.tas.findIndex(function(x){return x.id===b.dataset.id;}),gt=sbt.tas.splice(ti,1)[0];render(true);toast('حُذف «'+esc(gt.name)+'»',function(){sbt.tas.splice(ti,0,gt);});return true;}
@@ -1075,6 +1092,7 @@ document.addEventListener('input',function(ev){
   var changed=false;
   if(t.dataset.cname){var c=compById(t.dataset.cname);if(c){c.name=t.value;changed=true;}}
   if(t.dataset.tname){var x=tasById(t.dataset.tname);if(x){x.name=t.value;changed=true;}}
+  if(t.dataset.itn){var cn=compById(t.dataset.cid),itn=cn&&cn.items.filter(function(i){return i.id===t.dataset.itn;})[0];if(itn){itn.name=t.value;changed=true;}}
   if(t.dataset.iname){var ci=curComp(),it=ci&&ci.items.filter(function(i){return i.id===t.dataset.iname;})[0];if(it){it.name=t.value;changed=true;}}
   if(t.dataset.tc){var y=tasById(t.dataset.tc),n=parseInt(normDigits(t.value),10);if(y&&n>=1){y.count=Math.min(300,n);changed=true;}}
   if(t.dataset.clsname){var kc=teacher().classes.filter(function(k){return k.id===t.dataset.clsname;})[0];if(kc){kc.data.cls=t.value;changed=true;}}
