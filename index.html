@@ -183,6 +183,7 @@ input.pin{direction:ltr;text-align:center;letter-spacing:10px;font-size:22px;fon
 .qtot{display:flex;align-items:baseline;justify-content:center;gap:6px;margin-top:-4px}
 .qtot b{font-family:var(--display);font-size:30px;color:var(--green);line-height:1.1}
 .qrow{background:var(--sheet);border-radius:14px;box-shadow:var(--shadow);padding:10px 12px;display:flex;flex-direction:column;gap:8px;border-inline-start:4px solid var(--p1)}
+.qrow.on{box-shadow:0 0 0 2px var(--green),var(--shadow)}
 .qrow.p2{border-inline-start-color:var(--p2)} .qrow.pt{border-inline-start-color:var(--green-2)}
 .qrow .lb{font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .qrow .g{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -347,7 +348,7 @@ table.k tbody tr:nth-child(even) td.ct{background:var(--tot-soft)} table.k tbody
    الدخول: يختار المعلم اسمه ويدخل رقمه السري (تُحفظ بصمته فقط).
    الحفظ: كل إدخال يُحفظ فوراً في قاعدة IndexedDB على الجهاز (وعند تعذّرها localStorage)، ولا يغادر الجهاز.
    الأعمال من ٤٠ بتوزيع كشف المتابعة، والتسميع عدد لا يدخل في المجموع، ولا تُقبل درجة تتجاوز حد عنصرها. */
-var WORKS=40, APPV='2026-10-21e';
+var WORKS=40, APPV='2026-10-21f';
 var DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 var MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var PER={'1':'الستة أسابيع الأولى','2':'الستة أسابيع الثانية'};
@@ -563,16 +564,16 @@ function vGrid(){
   var head=hd(sb.name,'<button class="clsbtn" data-act="classes">الصف '+cn_(S.cls)+' ▾</button>','home','<button class="iconbtn" data-act="go" data-to="kashf" aria-label="الكشف">'+IC.sheet+'</button><button class="iconbtn" data-act="go" data-to="setup" aria-label="الإعدادات">'+IC.set+'</button>');
   if(!S.students.length)return head+subjSwitch()+vEmpty();
   if(mode==='file')ctx='<div class="ctx"><div class="ttl">'+IC.file+'ملفات الطلاب</div><p class="small dim">المس الطالب لرصد كل بنوده في '+sb.short+' من لوحة واحدة.</p></div>';
-  else if(mode==='tas'){var t=curTas();ctx='<div class="ctx"><div class="ttl">'+IC.tas+sb.tasName+'<span class="pill">عدد فقط</span></div><div class="chips">'+sb.tas.map(function(x){return '<button class="chip" data-act="picktas" data-id="'+x.id+'" aria-pressed="'+(t&&x.id===t.id)+'">'+esc(x.name)+' · '+x.count+'</button>';}).join('')+'</div><div class="row"><p class="small dim">المس الطالب واختر ما سمّعه.</p><button class="chip" data-act="go" data-to="setup">تعديل العدد</button></div></div>';}
+  else if(mode==='tas'){var t=curTas();ctx='<div class="ctx"><div class="ttl">'+IC.tas+sb.tasName+'<span class="pill">عدد فقط</span></div><div class="chips">'+sb.tas.map(function(x){return '<button class="chip" data-act="picktas" data-id="'+x.id+'" aria-pressed="'+(t&&x.id===t.id)+'">'+esc(x.name)+' · '+x.count+'</button>';}).join('')+'</div><div class="row"><p class="small dim">المس الطالب لتظهر كل بنوده.</p><button class="chip" data-act="go" data-to="setup">تعديل العدد</button></div></div>';}
   else if(c.kind==='count'||c.kind==='beh'){
     ctx='<div class="ctx"><div class="ttl">'+IC[c.kind]+esc(c.name)+'<span class="pill '+pcls+'">من '+c.mark+'</span></div>'+
-      '<p class="small dim">اختر الطالب، ثم اضغط <b>+</b> أو <b>−</b> داخل مربعه. كل ضغطة '+c.per+'، من صفر إلى '+c.mark+'.</p>'+
+      '<p class="small dim">المس الطالب لتظهر كل بنوده، ثم اضغط <b>+</b> أو <b>−</b>. كل ضغطة '+c.per+'، من صفر إلى '+c.mark+'.</p>'+
       (c.kind==='count'?'<button class="chip'+(S.quietOnly?' warn':'')+'" data-act="quiet" style="align-self:flex-start">لم يشاركوا هذا الأسبوع (<span class="num">'+quietList(c).length+'</span>)</button>':'')+'</div>';}
   else{
     var it=curItem(c),many=c.kind==='hand'||c.items.length>1;
     var chips='<div class="chips">'+c.items.map(function(x){return '<button class="chip" data-act="pick" data-id="'+x.id+'" aria-pressed="'+(it&&x.id===it.id)+'">'+esc(x.name)+'</button>';}).join('')+'<button class="chip add" data-act="newitem">+ جديد</button></div>';
     var act=c.kind==='score'?'<button class="btn pri" data-act="entry">رصد الدرجات</button>':'<button class="btn soft" data-act="allhw">الكل سلّم</button>';
-    ctx='<div class="ctx"><div class="ttl">'+IC[c.kind]+esc(c.name)+'<span class="pill '+pcls+'">من '+c.mark+'</span></div>'+(many||c.kind==='score'?chips:'')+(it?'<div class="row"><p class="small dim">'+(c.kind==='score'?'المس طالباً لرصد درجته، أو ابدأ بالترتيب.':'«الكل سلّم» ثم المس من لم يسلّم.')+'</p>'+act+'</div><p class="small dim">المس اسم '+(c.kind==='hand'?'الواجب':'التقييم')+' المحدد مرة أخرى لتعديله أو حذفه.</p>':'')+'</div>';
+    ctx='<div class="ctx"><div class="ttl">'+IC[c.kind]+esc(c.name)+'<span class="pill '+pcls+'">من '+c.mark+'</span></div>'+(many||c.kind==='score'?chips:'')+(it?'<div class="row"><p class="small dim">'+(c.kind==='score'?'المس الطالب لتظهر كل بنوده، أو ابدأ بالترتيب.':'«الكل سلّم» ثم المس من لم يسلّم واضغط −.')+'</p>'+act+'</div><p class="small dim">المس اسم '+(c.kind==='hand'?'الواجب':'التقييم')+' المحدد مرة أخرى لتعديله أو حذفه.</p>':'')+'</div>';
   }
   var qs=(c&&mode!=='tas'&&mode!=='file'&&c.kind==='count')?quietList(c):[];
   var tiles=S.students.map(function(s){
@@ -723,7 +724,7 @@ function qsHtml(){
     '<div class="seg per" role="group" aria-label="الفترة">'+['1','2'].map(function(p){return '<button data-act="qsper" data-p="'+p+'" aria-pressed="'+(per===p)+'">'+PER[p]+'</button>';}).join('')+'</div>';
   comps(per).forEach(function(c){
     var g=compGrade(c,s.id),gt='<span class="g" id="qg-'+c.id+'">'+(g===null?'<span class="dim small">لم يُرصد</span>':'<span class="num">'+r1(g)+'</span> <span class="dim small">من '+c.mark+'</span>')+'</span>';
-    h+='<div class="qrow p'+per+'">';
+    h+='<div class="qrow p'+per+(c.id===S.cur?' on':'')+'" id="qr-'+c.id+'">';
     if(c.kind==='count'||c.kind==='beh'){
       var k=evs(s.id,c.id,T).reduce(function(a,x){return a+(x.d||0);},0),gv=g||0;
       h+='<div class="row"><div><div class="lb">'+esc(c.name)+(k?'<span class="td">'+(k>0?'+':'−')+Math.abs(k)+' اليوم</span>':'')+'</div>'+gt+'</div>'+
@@ -749,13 +750,13 @@ function qsHtml(){
   var t=curTas();
   if(t){var set=((S.tv[t.id]=S.tv[t.id]||{})[s.id])||[],u='';
     for(var n=1;n<=t.count;n++)u+='<button data-act="qsunit" data-u="'+n+'" aria-pressed="'+(set.indexOf(n)>=0)+'">'+n+'</button>';
-    h+='<div class="qrow pt"><div class="row"><div><div class="lb">'+sb.tasName+'<span class="pill">عدد فقط</span></div><span class="g">سمّع <span class="num">'+set.length+'</span> <span class="dim small">من '+t.count+'</span></span></div>'+qpm('qstv','',set.length>0,set.length<t.count,sb.tasName)+'</div>'+
+    h+='<div class="qrow pt'+(S.cur==='tas'?' on':'')+'" id="qr-tas"><div class="row"><div><div class="lb">'+sb.tasName+'<span class="pill">عدد فقط</span></div><span class="g">سمّع <span class="num">'+set.length+'</span> <span class="dim small">من '+t.count+'</span></span></div>'+qpm('qstv','',set.length>0,set.length<t.count,sb.tasName)+'</div>'+
       (sb.tas.length>1?'<div class="chips">'+sb.tas.map(function(x){return '<button class="chip" data-act="qstas" data-id="'+x.id+'" aria-pressed="'+(x.id===t.id)+'">'+esc(x.name)+'</button>';}).join('')+'</div>':'<span class="small dim">'+esc(t.name)+(sb.range?' · المس آخر '+sb.unit+' سمّعها':'')+'</span>')+
       '<div class="units">'+u+'</div></div>';}
   h+='<button class="btn pri" data-act="closel">تم</button>';
   return h;
 }
-function qsSheet(sid){QS.sid=sid;layer(qsHtml());}
+function qsSheet(sid){QS.sid=sid;layer(qsHtml());var r=document.getElementById('qr-'+S.cur);if(r&&r.offsetTop>200)r.scrollIntoView({block:'center'});}
 function qsDraw(){var p=document.querySelector('#layer .sheetp');if(!p||!p.querySelector('.qs-h')||!stu(QS.sid))return;var y=p.scrollTop;p.innerHTML='<span class="grab"></span>'+qsHtml();p.scrollTop=y;}
 /* زيادة أو إنقاص لمسة في العدّاد أو السلوك، ضمن حدود الصفر ودرجة العنصر */
 function bump(c,sid,dn){
@@ -952,7 +953,7 @@ function onClick(ev){
   if(a==='per'){S.period=b.dataset.p;S.cur=null;S.quietOnly=false;S.pick=null;ensureCur();render(true);return true;}
   if(a==='tab'){S.cur=b.dataset.id;S.quietOnly=false;S.pick=null;S.view='grid';render();return true;}
   if(a==='quiet'){S.quietOnly=!S.quietOnly;render(true);return true;}
-  if(a==='pick-s'){S.pick=S.pick===b.dataset.sid?null:b.dataset.sid;render(true);return false;}
+  if(a==='pick-s'){qsSheet(b.dataset.sid);return false;}
   if(a==='inc'){var ci=curComp(),sid1=b.dataset.sid,e1=bump(ci,sid1,b.dataset.d==='-1');if(!e1)return false;
     S.pick=sid1;render(true);pulse(sid1);bumpToast(ci,sid1,e1);return true;}
   /* رصد الطالب في لوحة واحدة */
@@ -990,7 +991,8 @@ function onClick(ev){
   if(a==='entry'){var it9=curItem(curComp()),v0=S.vals[it9.id]||(S.vals[it9.id]={});S.ent={idx:nextBlank(v0,0),half:false,buf:''};S.view='entry';render();return true;}
   if(a==='tap'){
     var sid=b.dataset.sid,s=stu(sid);
-    if(S.cur==='file'){qsSheet(sid);return false;}
+    /* لمس الطالب في أي تبويب يفتح لوحته بكل البنود، ويُبرز فيها البند المفتوح */
+    qsSheet(sid);return false;
     if(S.cur==='tas'){tasSheet(sid);return false;}
     var c=curComp();
     if(c.kind==='count'||c.kind==='beh'){S.pick=sid;render(true);return false;}
