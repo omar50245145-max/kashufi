@@ -1,6 +1,6 @@
 /* كشوفي — عامل الخدمة: يحفظ ملفات البرنامج ليعمل دون إنترنت.
    غيّر رقم الإصدار V مع كل تحديث للبرنامج حتى يصل التحديث للمعلمين. */
-var V='kashufi-2026-10-21i';
+var V='kashufi-2026-10-22a';
 var FILES=[
     './',
     'index.html',
@@ -18,6 +18,8 @@ var FILES=[
     'fonts/reem-500-latin.woff2',
     'fonts/reem-700-arabic.woff2',
     'fonts/reem-700-latin.woff2',
+    'fonts/readex-arabic.woff2',
+    'fonts/readex-latin.woff2',
     'icons/apple-touch-icon.png',
     'icons/icon-192.png',
     'icons/icon-512.png'
