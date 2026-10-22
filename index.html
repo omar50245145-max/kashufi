@@ -212,13 +212,13 @@ input.pin{direction:ltr;text-align:center;letter-spacing:10px;font-size:22px;fon
 .ctx .chip[data-act=clsset]{background:var(--brand-pale);box-shadow:none;color:var(--brand-ink)}
 .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .tile{position:relative;min-height:112px;border-radius:18px;border:1.5px solid transparent;background:var(--surface);display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:0;padding:10px 10px 11px;text-align:start;line-height:1.3;cursor:pointer;color:var(--text);border-color:#e3e9e6}
-.tile .top{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
-.tile .av{width:30px;height:30px;font-size:13px}
-.tile .fn{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tile .ln{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tile .st{font-size:13px;font-weight:500;margin-top:0;display:flex;align-items:baseline;gap:1px;direction:ltr}
-.tile .st .num{font-size:19px;font-weight:700;color:var(--brand-ink)}
-.tile .st .of{font-size:12px;color:var(--muted);direction:ltr}
+/* الاسم كاملاً بلا قصّ، في وسط المربع، ويلتف على أكثر من سطر عند الحاجة */
+.tile .fn{font-weight:600;font-size:14.5px;line-height:1.35;overflow-wrap:anywhere;text-align:center;margin-top:auto}
+.tile .ln{font-size:12.5px;line-height:1.35;color:var(--muted);overflow-wrap:anywhere;text-align:center}
+.tile .top{display:flex;align-items:center;justify-content:center;margin-top:auto;padding-top:6px}
+.tile .st{font-size:11px;font-weight:500;margin-top:0;display:flex;align-items:baseline;gap:1px;direction:ltr}
+.tile .st .num{font-size:13.5px;font-weight:700;color:var(--brand-ink)}
+.tile .st .of{font-size:11px;color:var(--muted);direction:ltr}
 .tile .bd{direction:ltr;position:absolute;top:-6px;left:-4px;min-width:22px;height:20px;border-radius:999px;background:var(--brand);color:#fff;font-size:11.5px;font-weight:600;display:flex;align-items:center;justify-content:center;padding:0 6px;box-shadow:0 0 0 2px var(--ground)}
 .tile.k-done{border-color:#7cc4a2} .tile.k-done .st{color:var(--positive)}
 .tile.k-part{border-color:#efc66f} .tile.k-part .st{color:var(--pill-warning-ink)}
@@ -247,21 +247,20 @@ textarea.names{width:100%;min-height:150px;border:1px solid var(--control);borde
 .lg i:last-child b{background:#c98a17}
 .lg.big{height:10px;margin-top:0}
 .lg.big i,.lg.big b{border-radius:5px}
-.lgl{display:flex;gap:3px;font-size:13px;color:var(--muted);margin-top:8px}
+.lgl{display:flex;gap:10px;font-size:13px;color:var(--muted);margin-top:8px}
 .lgl span{min-width:0;white-space:nowrap}
 .lgl .num{color:var(--text);font-weight:600}
 
 /* لوحة الطالب */
-.qx{position:sticky;top:0;align-self:flex-end;z-index:3;width:40px;height:40px;margin:-4px 0 -36px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);display:flex;align-items:center;justify-content:center;flex:0 0 auto;padding:0}
+.qx{position:sticky;top:0;align-self:flex-start;z-index:3;width:40px;height:40px;margin:-4px 0 0;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);display:flex;align-items:center;justify-content:center;flex:0 0 auto;padding:0}
 .qx svg.ic{width:18px;height:18px;stroke-width:2.2}
 .qs-h{display:flex;align-items:center;gap:8px}
 .qs-h .nav{min-width:44px;min-height:44px;border-radius:50%;border:0;background:var(--surface);font-size:18px;font-weight:500;color:var(--brand-ink);flex:0 0 auto;border:1px solid var(--border)}
 .qs-h .nav[disabled]{opacity:.3}
 .qs-h .nm{flex:1;text-align:center;line-height:1.35;display:flex;flex-direction:column;align-items:center;gap:2px}
-.qs-h .nm .av{width:48px;height:48px;font-size:20px;margin-bottom:2px}
 .qs-h .nmb{border:0;background:transparent;padding:0;font-weight:700;font-size:19px;color:var(--text)}
 .qtot{display:flex;align-items:baseline;justify-content:center;gap:6px;margin-top:-2px}
-.qtot b{font-size:36px;font-weight:700;color:var(--brand-ink);line-height:1.1}
+.qtot b{font-size:24px;font-weight:700;color:var(--brand-ink);line-height:1.1}
 .qlg{background:var(--surface);border-radius:var(--radius-inner);padding:12px 14px;box-shadow:var(--lift)}
 .qrow{background:var(--surface);border-radius:18px;padding:12px 12px 12px 12px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--lift);border:2px solid transparent}
 .qrow.on{border-color:var(--c,var(--brand))}
@@ -276,6 +275,10 @@ textarea.names{width:100%;min-height:150px;border:1px solid var(--control);borde
 .qrow .hs{font-size:12px;font-weight:500;border-radius:999px;padding:0 9px}
 .qrow .hs.done{background:var(--pill-positive-bg);color:var(--pill-positive-ink)} .qrow .hs.part{background:var(--pill-warning-bg);color:var(--pill-warning-ink)} .qrow .hs.miss{background:var(--pill-negative-bg);color:var(--pill-negative-ink)}
 .qrow .sub2{display:flex;align-items:center;gap:8px}
+/* زر «سلّم»: لمسة تعطي الدرجة كاملة، ولمسة ثانية تلغي الرصد */
+.qdone{min-height:44px;min-width:104px;border-radius:var(--radius-control);border:0;background:var(--c-pale,var(--brand-pale));color:var(--c-ink,var(--brand-ink));font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 16px;flex:0 0 auto}
+.qdone[aria-pressed=true]{background:var(--c,var(--brand));color:#fff}
+.qdone svg.ic{width:20px;height:20px;stroke-width:2.4}
 .qrow .abs{min-height:28px;border-radius:999px;border:0;background:var(--raised);box-shadow:inset 0 0 0 1px var(--border);padding:0 10px;font-weight:500;font-size:12.5px;color:var(--text)}
 .qrow .abs[aria-pressed=true]{background:var(--pill-negative-bg);box-shadow:none;color:var(--pill-negative-ink)}
 .qrow .units{grid-template-columns:repeat(auto-fill,minmax(40px,1fr))}
@@ -426,7 +429,7 @@ table.k td.e{color:var(--muted)}
    الدخول: يختار المعلم اسمه ويدخل رقمه السري (تُحفظ بصمته فقط).
    الحفظ: كل إدخال يُحفظ فوراً في قاعدة IndexedDB على الجهاز (وعند تعذّرها localStorage)، ولا يغادر الجهاز.
    الأعمال من ٤٠ بتوزيع كشف المتابعة، والتسميع عدد لا يدخل في المجموع، ولا تُقبل درجة تتجاوز حد عنصرها. */
-var WORKS=40, APPV='2026-10-22a';
+var WORKS=40, APPV='2026-10-22b';
 var DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 var MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var PER={'1':'الستة أسابيع الأولى','2':'الستة أسابيع الثانية'};
@@ -674,7 +677,7 @@ function vGrid(){
   var qs=(c&&mode!=='tas'&&mode!=='file'&&c.kind==='count')?quietList(c):[];
   var tiles=S.students.map(function(s){
     var cls='tile',bd='',st='';
-    if(mode==='file'){return '<button class="'+cls+'" data-act="tap" data-sid="'+s.id+'" id="t-'+s.id+'"><span class="top"><span class="av '+avc(s.name)+'">'+esc(initial(s.name))+'</span><span class="st"><span class="num">'+r1(gradeOf(sb,s.id))+'</span><span class="of">/40</span></span></span><span class="fn">'+esc(first(s.name))+'</span><span class="ln">'+esc(rest(s.name))+'</span>'+ledgerBar(sb,s.id)+'</button>';}
+    if(mode==='file'){return '<button class="'+cls+'" data-act="tap" data-sid="'+s.id+'" id="t-'+s.id+'"><span class="fn">'+esc(first(s.name))+'</span><span class="ln">'+esc(rest(s.name))+'</span><span class="top"><span class="st"><span class="num">'+r1(gradeOf(sb,s.id))+'</span><span class="of">/40</span></span></span>'+ledgerBar(sb,s.id)+'</button>';}
     else if(mode==='tas'){var t=curTas(),n=tasDone(t,s.id);if(n===t.count)cls+=' k-full';st='<span class="st">سمّع <span class="num">'+n+'</span></span>';}
     else if(c.kind==='count'||c.kind==='beh'){var k=evs(s.id,c.id,T).reduce(function(a,x){return a+(x.d||0);},0),g=compGrade(c,s.id)||0;if(k)bd='<span class="bd">'+(k>0?'+':'−')+Math.abs(k)+'</span>';if(g>=c.mark)cls+=' k-full';st='<span class="st"><span class="num">'+r1(g)+' / '+c.mark+'</span></span>';if(c.kind==='count'&&S.quietOnly)cls+=qs.indexOf(s)>=0?' quiet':' faded';
       if(S.pick===s.id){cls+=' sel';st+='<span class="pmrow"><button class="pm minus'+(g<=0?' off':'')+'" data-act="inc" data-d="-1" data-sid="'+s.id+'" aria-label="إنقاص">−</button><button class="pm plus'+(g>=c.mark?' off':'')+'" data-act="inc" data-d="1" data-sid="'+s.id+'" aria-label="زيادة">+</button></span>';}
@@ -809,12 +812,15 @@ function tasSheet(sid){
 var QS={sid:null};
 var HSTEP=['miss','part','done'],HLBL={done:'سلّم',part:'ناقص',miss:'لم يسلّم'};
 function qpm(act,attrs,canDn,canUp,label,mid){return '<div class="qpm"><button class="pm minus'+(canDn?'':' off')+'" data-act="'+act+'" '+attrs+' data-d="-1" aria-label="إنقاص '+label+'">−</button>'+(mid||'')+'<button class="pm plus'+(canUp?'':' off')+'" data-act="'+act+'" '+attrs+' data-d="1" aria-label="زيادة '+label+'">+</button></div>';}
+function qdone(act,attrs,on,label){return '<button class="qdone" data-act="'+act+'" '+attrs+' aria-pressed="'+on+'" aria-label="سلّم '+label+'">'+(on?svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>'):'')+'سلّم</button>';}
+/* المشروع يُعرف باسمه: بند درجات فيه كلمة «مشروع» */
+function isProj(c){return c.kind==='score'&&/مشروع/.test(c.name);}
 function sstep(it){return it.max<=5?.5:1;}
 function qsHtml(){
   var sb=sub(),s=stu(QS.sid),i=S.students.indexOf(s),per=S.period,T=today();
   var h='<button class="qx" data-act="closel" aria-label="إغلاق">'+svg('<path d="M6 6l12 12M18 6L6 18"/>')+'</button>'+
     '<div class="qs-h"><button class="nav" data-act="qsnav" data-d="-1" aria-label="الطالب السابق"'+(i<=0?' disabled':'')+'>→</button>'+
-    '<div class="nm"><span class="av '+avc(s.name)+'">'+esc(initial(s.name))+'</span><button class="nmb" data-act="qscard" aria-label="فتح بطاقة '+esc(s.name)+'">'+esc(s.name)+' ‹</button><br><span class="small dim">'+sb.short+' · الطالب <span class="num">'+(i+1)+'</span> من <span class="num">'+S.students.length+'</span></span></div>'+
+    '<div class="nm"><button class="nmb" data-act="qscard" aria-label="فتح بطاقة '+esc(s.name)+'">'+esc(s.name)+' ‹</button><br><span class="small dim">'+sb.short+' · الطالب <span class="num">'+(i+1)+'</span> من <span class="num">'+S.students.length+'</span></span></div>'+
     '<button class="nav" data-act="qsnav" data-d="1" aria-label="الطالب التالي"'+(i>=S.students.length-1?' disabled':'')+'>←</button></div>'+
     '<div class="qtot"><b class="num" id="qstot">'+r1(gradeOf(sb,s.id))+'</b><span class="dim">من 40 · مجموع الأعمال</span></div>'+
     '<div class="qlg" id="qslg">'+ledgerBar(sb,s.id,true)+'</div>'+
@@ -828,12 +834,18 @@ function qsHtml(){
       h+='<div class="row"><div><div class="lb">'+esc(c.name)+(k?'<span class="td">'+(k>0?'+':'−')+Math.abs(k)+' اليوم</span>':'')+'</div>'+gt+'</div>'+
         qpm('qsinc','data-cid="'+c.id+'"',gv>0,gv<c.mark,esc(c.name))+'</div>';
     }else if(c.kind==='hand'){
-      /* الواجب: + يرفع الحالة (لم يسلّم ← ناقص ← سلّم) و− ينزلها؛ وأول + لواجب لم يُرصد = سلّم، وأول − = لم يسلّم */
+      /* الواجب: زر واحد «سلّم» يعطي الدرجة كاملة، ولمسه مرة أخرى يلغي الرصد */
       var it=curItem(c);
       if(!it)h+='<div class="row"><div class="lb">'+esc(c.name)+'</div>'+gt+'</div><p class="small dim">لا واجبات بعد — أضفها من تبويب '+esc(c.name)+'.</p>';
       else{var v=(S.vals[it.id]||{})[s.id];
-        h+='<div class="row"><div><div class="lb">'+esc(c.name)+(v?'<span class="hs '+v+'">'+HLBL[v]+'</span>':'')+'</div>'+gt+'</div>'+qpm('qshv','data-iid="'+it.id+'"',v!=='miss',v!=='done',esc(it.name))+'</div>';
+        h+='<div class="row"><div><div class="lb">'+esc(c.name)+(v&&v!=='done'?'<span class="hs '+v+'">'+HLBL[v]+'</span>':'')+'</div>'+gt+'</div>'+qdone('qshd','data-iid="'+it.id+'"',v==='done',esc(it.name))+'</div>';
         if(c.items.length>1)h+='<div class="chips">'+c.items.map(function(x){return '<button class="chip" data-act="qshsel" data-cid="'+c.id+'" data-id="'+x.id+'" aria-pressed="'+(x.id===it.id)+'">'+esc(x.name)+'</button>';}).join('')+'</div>';}
+    }else if(isProj(c)){
+      /* المشروع: زر «سلّم» لكل مشروع يعطي درجته كاملة، ولمسه مرة أخرى يلغي الرصد */
+      if(!c.items.length)h+='<div class="row"><div class="lb">'+esc(c.name)+'</div>'+gt+'</div><p class="small dim">لا مشاريع بعد — أضفها من الإعدادات.</p>';
+      if(c.items.length>1)h+='<div class="row"><div class="lb">'+esc(c.name)+'</div>'+gt+'</div>';
+      c.items.forEach(function(x){var v=(S.vals[x.id]||{})[s.id];
+        h+='<div class="row"><div><div class="lb">'+(c.items.length>1?esc(x.name):esc(c.name))+'</div>'+(c.items.length>1?'<span class="dim small">من '+x.max+'</span>':gt)+'</div>'+qdone('qspd','data-iid="'+x.id+'"',v===x.max,esc(x.name))+'</div>';});
     }else{
       /* الدرجات: + و− بخطوة نصف درجة (أو درجة إن كانت العظمى فوق ٥)، والرقم في الوسط يُكتب مباشرة أيضاً */
       if(!c.items.length)h+='<div class="row"><div class="lb">'+esc(c.name)+'</div>'+gt+'</div><p class="small dim">لا تقييمات بعد — أضفها من تبويب '+esc(c.name)+'.</p>';
@@ -1064,6 +1076,9 @@ function onClick(ev){
     if(hc===undefined)hn=up?'done':'miss';else hn=HSTEP[hi+(up?1:-1)];
     if(!hn){refuse(up?'سلّم الواجب كاملاً — لا زيادة بعدها':'مرصود «لم يسلّم» — لا إنقاص بعده');return false;}
     hv[QS.sid]=hn;render(true);qsDraw();return true;}
+  if(a==='qshd'){var hd=S.vals[b.dataset.iid]||(S.vals[b.dataset.iid]={});if(hd[QS.sid]==='done')delete hd[QS.sid];else hd[QS.sid]='done';render(true);qsDraw();return true;}
+  if(a==='qspd'){var px=null;comps(S.period).forEach(function(c){c.items.forEach(function(x){if(x.id===b.dataset.iid)px=x;});});if(!px)return false;
+    var pv=S.vals[px.id]||(S.vals[px.id]={});if(pv[QS.sid]===px.max)delete pv[QS.sid];else pv[QS.sid]=px.max;render(true);qsDraw();return true;}
   if(a==='qssv'){var sc=compById(b.dataset.cid),sx=sc&&sc.items.filter(function(x){return x.id===b.dataset.iid;})[0];if(!sx)return false;
     var sv=S.vals[sx.id]||(S.vals[sx.id]={}),cur=sv[QS.sid],st=sstep(sx),upq=b.dataset.d==='1';
     if(cur==='غ'){refuse('الطالب غائب — ألغِ «غائب» أولاً');return false;}
