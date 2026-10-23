@@ -372,7 +372,7 @@ table.k td.e{color:var(--muted)}
 .paper tbody tr:nth-child(even) td{background:#f7f7f3}
 .paper tbody tr:nth-child(even) td.ct{background:#f4efe2} .paper tbody tr:nth-child(even) td.cq{background:#e8f0ea}
 .paper .foot{display:flex;justify-content:space-between;font-size:14px;color:#555;margin-top:28px}
-.paper .foot.sign{font-size:15px;line-height:2.1;color:#444}
+.paper .foot.sign{font-size:12px;line-height:1.8;color:#444;margin-top:18px}
 .paper .foot.sign b{color:#1b1b1b;font-weight:600}
 .paper .big{display:flex;gap:16px;margin:18px 0}
 .paper .big div{flex:1;border:1px solid #cfcfc8;border-radius:10px;padding:12px 16px;display:flex;flex-direction:column}
@@ -431,7 +431,7 @@ table.k td.e{color:var(--muted)}
    الدخول: يختار المعلم اسمه ويدخل رقمه السري (تُحفظ بصمته فقط).
    الحفظ: كل إدخال يُحفظ فوراً في قاعدة IndexedDB على الجهاز (وعند تعذّرها localStorage)، ولا يغادر الجهاز.
    الأعمال من ٤٠ بتوزيع كشف المتابعة، والتسميع عدد لا يدخل في المجموع، ولا تُقبل درجة تتجاوز حد عنصرها. */
-var WORKS=40, APPV='2026-10-23a';
+var WORKS=40, APPV='2026-10-23b';
 var DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 var MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var PER={'1':'الستة أسابيع الأولى','2':'الستة أسابيع الثانية'};
@@ -1023,42 +1023,45 @@ function pgCell(g,x,y,w,h,t,o){o=o||{};pgBox(g,x,y,w,h,o.bg,o.line);if(t===''||t
 function pgDate(){return fd(today())+' '+new Date().getFullYear();}
 function pgFoot(g,i,n){if(n>1)pgText(g,'صفحة '+(i+1)+' من '+n,g.W/2,g.H-34,'center','#777',400,12);}
 /* تحت الجدول: اسم المعلم وتوقيعه في اليمين، ورئيس القسم وتوقيعه في يسار الصفحة */
-var SIGN_H=72;
+var SIGN_H=30;
 function pgSign(g,y,L,R){var dots='....................';
-  pgText(g,'اسم المعلم: '+teacher().name,R,y,'right','#1b1b1b',600,15,(R-L)/2-20);pgText(g,'التوقيع: '+dots,R,y+32,'right','#444',400,14);
+  pgText(g,'اسم المعلم: '+teacher().name,R,y,'right','#1b1b1b',600,11.5,(R-L)/2-20);pgText(g,'التوقيع: '+dots,R,y+19,'right','#444',400,10.5);
   /* كتلة رئيس القسم تبدأ من يسار الصفحة، وسطراها يبدآن من النقطة نفسها على اليمين */
-  pgFont(g,600,15);var bw=pgW(g,'رئيس القسم: '+dots);pgFont(g,400,14);bw=Math.max(bw,pgW(g,'التوقيع: '+dots));
-  pgText(g,'رئيس القسم: '+dots,L+bw,y,'right','#1b1b1b',600,15);pgText(g,'التوقيع: '+dots,L+bw,y+32,'right','#444',400,14);}
+  pgFont(g,600,11.5);var bw=pgW(g,'رئيس القسم: '+dots);pgFont(g,400,10.5);bw=Math.max(bw,pgW(g,'التوقيع: '+dots));
+  pgText(g,'رئيس القسم: '+dots,L+bw,y,'right','#1b1b1b',600,11.5);pgText(g,'التوقيع: '+dots,L+bw,y+19,'right','#444',400,10.5);}
 
-/* الكشف: A4 أفقي، يتكرر العنوان ورأس الجدول في كل صفحة */
+/* الكشف: A4 أفقي في صفحة واحدة: يصغر ارتفاع الصف وخطه بقدر عدد الطلاب حتى يتسع الكشف كله مع التوقيعات.
+   وإن زاد الطلاب حتى يصير الصف أقل من ١٢ نقطة (قرابة ٤٦ طالباً) يتجزأ إلى صفحات، ويتكرر العنوان ورأس الجدول */
 function pdfKashf(sb){
   var P=sb.comps.filter(function(c){return c.period==='1';}),Q=sb.comps.filter(function(c){return c.period==='2';}),C=P.concat(Q);
-  var L=40,R=1083,cw=[34,220],fix=34+220+76+76,each=(R-L-fix)/Math.max(1,C.length),rh=24,top=176,bottom=794-70,per=Math.max(1,Math.floor((bottom-top)/rh));
-  var tasT=(sb.unit==='آية'?'الآيات':'الأحاديث')+' المسمّعة',pages=[],n=Math.max(1,Math.ceil(S.students.length/per));
-  for(var pi=0;pi<n;pi++){var g=pgNew(true),x=R;
-    pgText(g,'كشف متابعة '+sb.name+' — الصف '+S.cls,g.W/2,58,'center','#1b1b1b',700,26);
-    pgText(g,teacher().name,R,94,'right','#555',400,15);pgText(g,pgDate(),L,94,'left','#555',400,15);
+  var L=36,R=1087,fix=32+220+72+72,each=(R-L-fix)/Math.max(1,C.length),hy=92,h1=24,h2=32,top=hy+h1+h2,N=S.students.length;
+  var room=794-20-24-SIGN_H-top-1,rh=Math.min(24,room/Math.max(1,N)),per=N||1;
+  /* عدد كبير جداً: يتوزع الطلاب بالتساوي على أقل عدد من الصفحات */
+  if(rh<12){var np=Math.ceil(N*12/room);per=Math.ceil(N/np);rh=Math.min(24,room/per);}
+  var fs=Math.max(8,Math.min(13,rh*.6)),tasT=(sb.unit==='آية'?'الآيات':'الأحاديث')+' المسمّعة',pages=[],n=Math.max(1,Math.ceil(N/per));
+  for(var pi=0;pi<n;pi++){var g=pgNew(true),x=R,y=hy;
+    pgText(g,'كشف متابعة '+sb.name+' — الصف '+S.cls,g.W/2,44,'center','#1b1b1b',700,22);
+    pgText(g,teacher().name,R,74,'right','#555',400,13);pgText(g,pgDate(),L,74,'left','#555',400,13);
     /* رأس الجدول: صفّان */
-    var y=112,h1=28,h2=36;
-    pgCell(g,x-34,y,34,h1+h2,'م',{bg:'#f1f1ec',w:700});x-=34;
-    pgCell(g,x-220,y,220,h1+h2,'اسم المتعلم',{bg:'#3f5a48',col:'#fff',w:700});x-=220;
-    if(P.length){pgCell(g,x-each*P.length,y,each*P.length,h1,'الستة أسابيع الأولى',{bg:'#3f5a48',col:'#fff',w:700});}
-    P.forEach(function(c,k){pgCell(g,x-each*(k+1),y+h1,each,h2,c.name+' '+c.mark,{bg:'#f1f1ec',w:700,s:11.5,wrap:true});});x-=each*P.length;
-    if(Q.length){pgCell(g,x-each*Q.length,y,each*Q.length,h1,'الستة أسابيع الثانية',{bg:'#8a6a45',col:'#fff',w:700});}
-    Q.forEach(function(c,k){pgCell(g,x-each*(k+1),y+h1,each,h2,c.name+' '+c.mark,{bg:'#f1f1ec',w:700,s:11.5,wrap:true});});x-=each*Q.length;
-    pgCell(g,x-76,y,76,h1+h2,'مجموع الأعمال ٤٠',{bg:'#f4efe2',w:700,s:12,wrap:true});x-=76;
-    pgCell(g,x-76,y,76,h1+h2,tasT,{bg:'#e8f0ea',w:700,s:12,wrap:true});
+    pgCell(g,x-32,y,32,h1+h2,'م',{bg:'#f1f1ec',w:700,s:12});x-=32;
+    pgCell(g,x-220,y,220,h1+h2,'اسم المتعلم',{bg:'#3f5a48',col:'#fff',w:700,s:12.5});x-=220;
+    if(P.length)pgCell(g,x-each*P.length,y,each*P.length,h1,'الستة أسابيع الأولى',{bg:'#3f5a48',col:'#fff',w:700,s:12.5});
+    P.forEach(function(c,k){pgCell(g,x-each*(k+1),y+h1,each,h2,c.name+' '+c.mark,{bg:'#f1f1ec',w:700,s:10.5,wrap:true});});x-=each*P.length;
+    if(Q.length)pgCell(g,x-each*Q.length,y,each*Q.length,h1,'الستة أسابيع الثانية',{bg:'#8a6a45',col:'#fff',w:700,s:12.5});
+    Q.forEach(function(c,k){pgCell(g,x-each*(k+1),y+h1,each,h2,c.name+' '+c.mark,{bg:'#f1f1ec',w:700,s:10.5,wrap:true});});x-=each*Q.length;
+    pgCell(g,x-72,y,72,h1+h2,'مجموع الأعمال ٤٠',{bg:'#f4efe2',w:700,s:11,wrap:true});x-=72;
+    pgCell(g,x-72,y,72,h1+h2,tasT,{bg:'#e8f0ea',w:700,s:11,wrap:true});
     /* صفوف الطلاب */
     S.students.slice(pi*per,(pi+1)*per).forEach(function(s,j){var i=pi*per+j,yy=top+j*rh,z=i%2?'#f7f7f3':null,xx=R;
-      pgCell(g,xx-34,yy,34,rh,i+1,{bg:z});xx-=34;
-      pgCell(g,xx-220,yy,220,rh,s.name,{bg:z,right:true});xx-=220;
-      C.forEach(function(c){var v=compGrade(c,s.id);pgCell(g,xx-each,yy,each,rh,v===null?'':r1(v),{bg:z});xx-=each;});
-      pgCell(g,xx-76,yy,76,rh,r1(gradeOf(sb,s.id)),{bg:'#f4efe2',w:700});xx-=76;
-      pgCell(g,xx-76,yy,76,rh,tasTotal(sb,s.id),{bg:'#e8f0ea'});});
+      pgCell(g,xx-32,yy,32,rh,i+1,{bg:z,s:fs});xx-=32;
+      pgCell(g,xx-220,yy,220,rh,s.name,{bg:z,right:true,s:fs});xx-=220;
+      C.forEach(function(c){var v=compGrade(c,s.id);pgCell(g,xx-each,yy,each,rh,v===null?'':r1(v),{bg:z,s:fs});xx-=each;});
+      pgCell(g,xx-72,yy,72,rh,r1(gradeOf(sb,s.id)),{bg:'#f4efe2',w:700,s:fs});xx-=72;
+      pgCell(g,xx-72,yy,72,rh,tasTotal(sb,s.id),{bg:'#e8f0ea',s:fs});});
     pages.push(g);}
   /* التوقيعات تحت آخر صف، وإن لم تتسع لها الصفحة الأخيرة تنتقل إلى صفحة جديدة */
-  var last=pages[pages.length-1],yEnd=top+(S.students.length-(pages.length-1)*per)*rh+34;
-  if(yEnd+SIGN_H>794-50){last=pgNew(true);pages.push(last);yEnd=70;}
+  var last=pages[pages.length-1],yEnd=top+(N-(pages.length-1)*per)*rh+18+6;
+  if(yEnd+SIGN_H>794-20){last=pgNew(true);pages.push(last);yEnd=60;}
   pgSign(last,yEnd,L,R);
   pages.forEach(function(p,i){pgFoot(p,i,pages.length);});
   return pages;
