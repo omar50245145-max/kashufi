@@ -372,6 +372,8 @@ table.k td.e{color:var(--muted)}
 .paper tbody tr:nth-child(even) td{background:#f7f7f3}
 .paper tbody tr:nth-child(even) td.ct{background:#f4efe2} .paper tbody tr:nth-child(even) td.cq{background:#e8f0ea}
 .paper .foot{display:flex;justify-content:space-between;font-size:14px;color:#555;margin-top:28px}
+.paper .foot.sign{font-size:15px;line-height:2.1;color:#444}
+.paper .foot.sign b{color:#1b1b1b;font-weight:600}
 .paper .big{display:flex;gap:16px;margin:18px 0}
 .paper .big div{flex:1;border:1px solid #cfcfc8;border-radius:10px;padding:12px 16px;display:flex;flex-direction:column}
 .paper .big b{font-family:var(--display);font-size:34px;color:#1f6b4f}
@@ -429,7 +431,7 @@ table.k td.e{color:var(--muted)}
    الدخول: يختار المعلم اسمه ويدخل رقمه السري (تُحفظ بصمته فقط).
    الحفظ: كل إدخال يُحفظ فوراً في قاعدة IndexedDB على الجهاز (وعند تعذّرها localStorage)، ولا يغادر الجهاز.
    الأعمال من ٤٠ بتوزيع كشف المتابعة، والتسميع عدد لا يدخل في المجموع، ولا تُقبل درجة تتجاوز حد عنصرها. */
-var WORKS=40, APPV='2026-10-22b';
+var WORKS=40, APPV='2026-10-23a';
 var DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 var MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var PER={'1':'الستة أسابيع الأولى','2':'الستة أسابيع الثانية'};
@@ -752,18 +754,21 @@ function studentPage(sb,s){
   var rows='';['1','2'].forEach(function(per){sb.comps.filter(function(c){return c.period===per;}).forEach(function(c){var g=compGrade(c,s.id);rows+='<tr><td>'+PER[per]+'</td><td>'+esc(c.name)+'</td><td>'+(g===null?'لم يُرصد':r1(g))+'</td><td>'+c.mark+'</td></tr>';});});
   var ids=sb.comps.map(function(c){return c.id;});
   var notes=S.events.filter(function(e){return e.sid===s.id&&e.pol&&!e.d&&ids.indexOf(e.cid)>=0;}).map(function(e){return '<li>'+fd(e.date)+': '+(e.pol==='+'?'إيجابي — ':'للمتابعة — ')+esc(e.tag)+(e.text?' ('+esc(e.text)+')':'')+'</li>';}).join('');
-  return '<h1>تقرير متابعة الطالب</h1><div class="meta"><span>'+esc(s.name)+' · الصف '+cn_(S.cls)+'</span><span>'+sb.name+' · '+esc(teacher().name)+'</span></div>'+
+  return '<h1>تقرير متابعة الطالب</h1><div class="meta"><span>'+esc(s.name)+' · الصف '+cn_(S.cls)+'</span><span>'+sb.name+' · '+fd(today())+' '+new Date().getFullYear()+'</span></div>'+
     '<div class="big"><div><span>مجموع الأعمال</span><b>'+r1(gradeOf(sb,s.id))+' <small>من ٤٠</small></b></div><div><span>'+sb.tasName+'</span><b>'+tasTotal(sb,s.id)+' <small>'+(sb.unit==='آية'?'آية':'حديثاً')+'</small></b></div></div>'+
     '<table><thead><tr><th>الفترة</th><th>العنصر</th><th>الدرجة</th><th>من</th></tr></thead><tbody>'+rows+'</tbody></table>'+
     '<h3>ملاحظات السلوك</h3>'+(notes?'<ul>'+notes+'</ul>':'<p>لا توجد ملاحظات.</p>')+
-    '<div class="foot"><span>توقيع المعلم: ....................</span><span>'+fd(today())+' '+new Date().getFullYear()+'</span></div>';
+    signHtml();
 }
+/* تحت الجدول: اسم المعلم في اليمين، ورئيس القسم في يسار الصفحة، ولكلٍّ سطر توقيع */
+function signHtml(){var d='....................';return '<div class="foot sign"><span><b>اسم المعلم: '+esc(teacher().name)+'</b><br>التوقيع: '+d+'</span><span><b>رئيس القسم: '+d+'</b><br>التوقيع: '+d+'</span></div>';}
 function vPdf(){
   var sb=sub(),st=S.pdfKind==='student',s=st?stu(S.sid):null;if(st&&!s){S.view='grid';return vGrid();}
-  var page=st?'<div class="paper port">'+studentPage(sb,s)+'</div>':'<div class="paper land"><h1>كشف متابعة '+sb.name+'<small>الصف: '+cn_(S.cls)+'</small></h1><div class="meta"><span>'+esc(teacher().name)+'</span><span>'+fd(today())+' '+new Date().getFullYear()+'</span></div>'+kashfTable(sb)+'</div>';
+  var page=st?'<div class="paper port">'+studentPage(sb,s)+'</div>':'<div class="paper land"><h1>كشف متابعة '+sb.name+'<small>الصف: '+cn_(S.cls)+'</small></h1><div class="meta"><span>'+esc(teacher().name)+'</span><span>'+fd(today())+' '+new Date().getFullYear()+'</span></div>'+kashfTable(sb)+signHtml()+'</div>';
   return hd(st?'PDF لولي الأمر':'PDF الكشف',st?esc(s.name):sb.name+' · الصف '+cn_(S.cls),st?'card':'kashf')+
-    '<div class="paperwrap" id="pw">'+page+'</div><p class="small dim">ستظهر شاشة الطباعة: لحفظه ملف PDF اضغط زر المشاركة فيها ثم «حفظ في الملفات» أو أرسله، أو اطبعه مباشرة.</p>'+
-    '<button class="btn pri" data-act="print" data-o="'+(st?'portrait':'landscape')+'">حفظ PDF أو طباعة</button>';
+    '<div class="paperwrap" id="pw">'+page+'</div>'+
+    '<div class="row"><button class="btn pri" style="flex:1" data-act="pdfsave">تحميل PDF</button><button class="btn soft" style="flex:1" data-act="print" data-o="'+(st?'portrait':'landscape')+'">طباعة</button></div>'+
+    '<p class="small dim">«تحميل PDF» يصنع ملفاً تحفظه في «الملفات» أو ترسله، وفي قائمته أيضاً «طباعة».</p>';
 }
 function fitPaper(){var w=document.getElementById('pw');if(!w)return;var p=w.firstChild,W=p.classList.contains('land')?1123:794,k=w.clientWidth/W;p.style.transform='scale('+k+')';w.style.height=(p.offsetHeight*k)+'px';}
 function tabbar(){
@@ -993,6 +998,126 @@ function csvKashf(){
   shareFile('كشف-'+sb.short+'-'+S.cls.replace(/[\/\\\s]+/g,'-')+'.csv',text,'text/csv');
 }
 function doPrint(o){document.getElementById('pagesz').textContent='@page{size:A4 '+o+';margin:10mm}';try{window.print();}catch(e){toast('تعذّرت الطباعة هنا — افتح البرنامج في سفاري وجرّب مرة أخرى',null,true);}}
+/* ---------- ملف PDF حقيقي يُصنع على الجهاز ----------
+   في تطبيق الشاشة الرئيسية على آيفون لا تعمل window.print()، فلا يحدث شيء عند الضغط.
+   لذلك تُرسم الورقة على لوحة رسم (canvas) بخط البرنامج نفسه، وتُجمع الصفحات في ملف PDF،
+   ثم تُفتح قائمة المشاركة: «حفظ في الملفات» و«طباعة» والإرسال. وفي الحاسوب يُنزَّل الملف مباشرة.
+   كل ذلك يجري متزامناً داخل لمسة الزر، لأن سفاري لا يفتح قائمة المشاركة إلا من لمسة مباشرة. */
+var PDFX=2;/* دقة الرسم: ضعف مقاس الورقة (قرابة ١٩٢ نقطة في البوصة) */
+function pgNew(land){var c=document.createElement('canvas'),W=land?1123:794,H=land?794:1123;c.width=W*PDFX;c.height=H*PDFX;c.dir='rtl';
+  var x=c.getContext('2d');x.scale(PDFX,PDFX);x.fillStyle='#fff';x.fillRect(0,0,W,H);try{x.direction='rtl';}catch(e){}x.textBaseline='middle';return {c:c,x:x,W:W,H:H,land:land};}
+function pgFont(g,w,s){g.x.font=w+' '+s+'px "Readex Pro","IBM Plex Sans Arabic",Tahoma,Arial,sans-serif';}
+/* النص يُحاط بعلامتي اتجاه من اليمين إلى اليسار حتى لا ينقلب ترتيب العربي مع الأرقام */
+function pgRtl(t){return '‫'+String(t)+'‬';}
+function pgW(g,t){return g.x.measureText(pgRtl(t)).width;}
+/* كتابة سطر: a محاذاة (right / center / left)، ويُصغَّر الخط إن زاد النص عن العرض mw */
+function pgText(g,t,x,y,a,col,w,s,mw){pgFont(g,w,s);while(mw&&s>8&&pgW(g,t)>mw){s-=.5;pgFont(g,w,s);}
+  g.x.fillStyle=col||'#1b1b1b';g.x.textAlign=a||'right';g.x.fillText(pgRtl(t),x,y);}
+/* تقسيم نص إلى أسطر لا يزيد كل منها عن العرض mw */
+function pgWrap(g,t,w,s,mw){pgFont(g,w,s);var out=[],line='';String(t).split(/\s+/).forEach(function(wd){var tr=line?line+' '+wd:wd;if(line&&pgW(g,tr)>mw){out.push(line);line=wd;}else line=tr;});if(line)out.push(line);return out;}
+function pgBox(g,x,y,w,h,fill,line){if(fill){g.x.fillStyle=fill;g.x.fillRect(x,y,w,h);}if(line!==false){g.x.strokeStyle=line||'#cfcfc8';g.x.lineWidth=1;g.x.strokeRect(x+.5,y+.5,w,h);}}
+/* خلية جدول: نص في الوسط (أو على اليمين) وقد يكون عدة أسطر */
+function pgCell(g,x,y,w,h,t,o){o=o||{};pgBox(g,x,y,w,h,o.bg,o.line);if(t===''||t==null)return;
+  var s=o.s||13,wt=o.w||400,lines=o.wrap?pgWrap(g,t,wt,s,w-8):[String(t)],lh=s*1.3,y0=y+h/2-(lines.length-1)*lh/2;
+  lines.forEach(function(l,i){if(o.right)pgText(g,l,x+w-7,y0+i*lh,'right',o.col,wt,s,w-12);else pgText(g,l,x+w/2,y0+i*lh,'center',o.col,wt,s,w-6);});}
+function pgDate(){return fd(today())+' '+new Date().getFullYear();}
+function pgFoot(g,i,n){if(n>1)pgText(g,'صفحة '+(i+1)+' من '+n,g.W/2,g.H-34,'center','#777',400,12);}
+/* تحت الجدول: اسم المعلم وتوقيعه في اليمين، ورئيس القسم وتوقيعه في يسار الصفحة */
+var SIGN_H=72;
+function pgSign(g,y,L,R){var dots='....................';
+  pgText(g,'اسم المعلم: '+teacher().name,R,y,'right','#1b1b1b',600,15,(R-L)/2-20);pgText(g,'التوقيع: '+dots,R,y+32,'right','#444',400,14);
+  /* كتلة رئيس القسم تبدأ من يسار الصفحة، وسطراها يبدآن من النقطة نفسها على اليمين */
+  pgFont(g,600,15);var bw=pgW(g,'رئيس القسم: '+dots);pgFont(g,400,14);bw=Math.max(bw,pgW(g,'التوقيع: '+dots));
+  pgText(g,'رئيس القسم: '+dots,L+bw,y,'right','#1b1b1b',600,15);pgText(g,'التوقيع: '+dots,L+bw,y+32,'right','#444',400,14);}
+
+/* الكشف: A4 أفقي، يتكرر العنوان ورأس الجدول في كل صفحة */
+function pdfKashf(sb){
+  var P=sb.comps.filter(function(c){return c.period==='1';}),Q=sb.comps.filter(function(c){return c.period==='2';}),C=P.concat(Q);
+  var L=40,R=1083,cw=[34,220],fix=34+220+76+76,each=(R-L-fix)/Math.max(1,C.length),rh=24,top=176,bottom=794-70,per=Math.max(1,Math.floor((bottom-top)/rh));
+  var tasT=(sb.unit==='آية'?'الآيات':'الأحاديث')+' المسمّعة',pages=[],n=Math.max(1,Math.ceil(S.students.length/per));
+  for(var pi=0;pi<n;pi++){var g=pgNew(true),x=R;
+    pgText(g,'كشف متابعة '+sb.name+' — الصف '+S.cls,g.W/2,58,'center','#1b1b1b',700,26);
+    pgText(g,teacher().name,R,94,'right','#555',400,15);pgText(g,pgDate(),L,94,'left','#555',400,15);
+    /* رأس الجدول: صفّان */
+    var y=112,h1=28,h2=36;
+    pgCell(g,x-34,y,34,h1+h2,'م',{bg:'#f1f1ec',w:700});x-=34;
+    pgCell(g,x-220,y,220,h1+h2,'اسم المتعلم',{bg:'#3f5a48',col:'#fff',w:700});x-=220;
+    if(P.length){pgCell(g,x-each*P.length,y,each*P.length,h1,'الستة أسابيع الأولى',{bg:'#3f5a48',col:'#fff',w:700});}
+    P.forEach(function(c,k){pgCell(g,x-each*(k+1),y+h1,each,h2,c.name+' '+c.mark,{bg:'#f1f1ec',w:700,s:11.5,wrap:true});});x-=each*P.length;
+    if(Q.length){pgCell(g,x-each*Q.length,y,each*Q.length,h1,'الستة أسابيع الثانية',{bg:'#8a6a45',col:'#fff',w:700});}
+    Q.forEach(function(c,k){pgCell(g,x-each*(k+1),y+h1,each,h2,c.name+' '+c.mark,{bg:'#f1f1ec',w:700,s:11.5,wrap:true});});x-=each*Q.length;
+    pgCell(g,x-76,y,76,h1+h2,'مجموع الأعمال ٤٠',{bg:'#f4efe2',w:700,s:12,wrap:true});x-=76;
+    pgCell(g,x-76,y,76,h1+h2,tasT,{bg:'#e8f0ea',w:700,s:12,wrap:true});
+    /* صفوف الطلاب */
+    S.students.slice(pi*per,(pi+1)*per).forEach(function(s,j){var i=pi*per+j,yy=top+j*rh,z=i%2?'#f7f7f3':null,xx=R;
+      pgCell(g,xx-34,yy,34,rh,i+1,{bg:z});xx-=34;
+      pgCell(g,xx-220,yy,220,rh,s.name,{bg:z,right:true});xx-=220;
+      C.forEach(function(c){var v=compGrade(c,s.id);pgCell(g,xx-each,yy,each,rh,v===null?'':r1(v),{bg:z});xx-=each;});
+      pgCell(g,xx-76,yy,76,rh,r1(gradeOf(sb,s.id)),{bg:'#f4efe2',w:700});xx-=76;
+      pgCell(g,xx-76,yy,76,rh,tasTotal(sb,s.id),{bg:'#e8f0ea'});});
+    pages.push(g);}
+  /* التوقيعات تحت آخر صف، وإن لم تتسع لها الصفحة الأخيرة تنتقل إلى صفحة جديدة */
+  var last=pages[pages.length-1],yEnd=top+(S.students.length-(pages.length-1)*per)*rh+34;
+  if(yEnd+SIGN_H>794-50){last=pgNew(true);pages.push(last);yEnd=70;}
+  pgSign(last,yEnd,L,R);
+  pages.forEach(function(p,i){pgFoot(p,i,pages.length);});
+  return pages;
+}
+/* تقرير الطالب لولي الأمر: A4 عمودي، وتنتقل الملاحظات إلى صفحة جديدة إن طالت */
+function pdfStudent(sb,s){
+  var pages=[],g=pgNew(false),L=40,R=754,y;
+  pgText(g,'تقرير متابعة الطالب',g.W/2,70,'center','#1b1b1b',700,28);
+  pgText(g,s.name+' · الصف '+S.cls,R,112,'right','#444',500,16,330);pgText(g,sb.name+' · '+pgDate(),L,112,'left','#444',400,15,330);
+  /* المربعان الكبيران */
+  var bw=(R-L-16)/2;
+  [[R-bw,'مجموع الأعمال',r1(gradeOf(sb,s.id)),'من ٤٠'],[L,sb.tasName,tasTotal(sb,s.id),sb.unit==='آية'?'آية':'حديثاً']].forEach(function(b){
+    pgBox(g,b[0],140,bw,92,null,'#cfcfc8');pgText(g,b[1],b[0]+bw-16,164,'right','#555',500,15);
+    pgFont(g,700,34);var vw=pgW(g,b[2]);pgText(g,b[2],b[0]+bw-16,204,'right','#1f6b4f',700,34);pgText(g,b[3],b[0]+bw-24-vw,208,'right','#555',400,17);});
+  /* جدول البنود */
+  var cw=[250,234,120,110],hd=['الفترة','العنصر','الدرجة','من'];y=258;
+  var x=R;hd.forEach(function(t,k){pgCell(g,x-cw[k],y,cw[k],32,t,{bg:'#3f5a48',col:'#fff',w:700,s:14});x-=cw[k];});y+=32;
+  var n=0;['1','2'].forEach(function(per){sb.comps.filter(function(c){return c.period===per;}).forEach(function(c){var v=compGrade(c,s.id),z=n++%2?'#f7f7f3':null,xx=R;
+    [PER[per],c.name,v===null?'لم يُرصد':r1(v),c.mark].forEach(function(t,k){pgCell(g,xx-cw[k],y,cw[k],28,t,{bg:z,s:14,w:k===2?700:400});xx-=cw[k];});y+=28;});});
+  /* ملاحظات السلوك */
+  y+=34;pgText(g,'ملاحظات السلوك',R,y,'right','#1b1b1b',700,19);y+=30;
+  var ids=sb.comps.map(function(c){return c.id;}),notes=S.events.filter(function(e){return e.sid===s.id&&e.pol&&!e.d&&ids.indexOf(e.cid)>=0;});
+  if(!notes.length){pgText(g,'لا توجد ملاحظات.',R,y,'right','#444',400,15);y+=26;}
+  notes.forEach(function(e){pgWrap(g,fd(e.date)+': '+(e.pol==='+'?'إيجابي — ':'للمتابعة — ')+e.tag+(e.text?' ('+e.text+')':''),400,15,R-L-24).forEach(function(l,k){
+    if(y>g.H-90){pages.push(g);g=pgNew(false);y=70;}
+    if(!k)pgText(g,'•',R,y,'right','#444',700,15);pgText(g,l,R-20,y,'right','#1b1b1b',400,15);y+=26;});y+=4;});
+  y+=22;if(y+SIGN_H>g.H-50){pages.push(g);g=pgNew(false);y=70;}
+  pgSign(g,y,L,R);
+  pages.push(g);pages.forEach(function(p,i){pgFoot(p,i,pages.length);});
+  return pages;
+}
+/* جمع الصفحات في ملف PDF: كل صفحة صورة JPEG بمقاس A4 كامل */
+function pdfBytes(pages){
+  var parts=[],len=0,offs=[],n=pages.length,tot=3+n*3;
+  function add(x){if(typeof x==='string'){var u=new Uint8Array(x.length);for(var i=0;i<x.length;i++)u[i]=x.charCodeAt(i)&255;x=u;}parts.push(x);len+=x.length;}
+  function obj(k,body){offs[k]=len;add(k+' 0 obj\n');body.forEach(add);add('\nendobj\n');}
+  function jpg(c){var d=atob(c.toDataURL('image/jpeg',.9).split(',')[1]),u=new Uint8Array(d.length);for(var i=0;i<d.length;i++)u[i]=d.charCodeAt(i);return u;}
+  add('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+  obj(1,['<< /Type /Catalog /Pages 2 0 R >>']);
+  obj(2,['<< /Type /Pages /Kids ['+pages.map(function(p,i){return (3+i*3)+' 0 R';}).join(' ')+'] /Count '+n+' >>']);
+  pages.forEach(function(p,i){var b=3+i*3,w=p.land?841.89:595.28,h=p.land?595.28:841.89,img=jpg(p.c),cs='q '+w+' 0 0 '+h+' 0 0 cm /Im0 Do Q';
+    var iw=p.c.width,ih=p.c.height;p.c.width=p.c.height=0;/* تحرير ذاكرة اللوحة بعد ترميزها */
+    obj(b,['<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+w+' '+h+'] /Resources << /XObject << /Im0 '+(b+2)+' 0 R >> >> /Contents '+(b+1)+' 0 R >>']);
+    obj(b+1,['<< /Length '+cs.length+' >>\nstream\n'+cs+'\nendstream']);
+    obj(b+2,['<< /Type /XObject /Subtype /Image /Width '+iw+' /Height '+ih+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+img.length+' >>\nstream\n',img,'\nendstream']);});
+  var xr=len;add('xref\n0 '+tot+'\n0000000000 65535 f \n');
+  for(var k=1;k<tot;k++)add(('0000000000'+offs[k]).slice(-10)+' 00000 n \n');
+  add('trailer\n<< /Size '+tot+' /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF\n');
+  var out=new Uint8Array(len),o=0;parts.forEach(function(p){out.set(p,o);o+=p.length;});return out;
+}
+/* صنع الملف ومشاركته: الكشف أو تقرير الطالب الظاهر في شاشة PDF */
+function pdfFile(){var sb=sub(),st=S.pdfKind==='student',s=st?stu(S.sid):null;
+  var pages=st?pdfStudent(sb,s):pdfKashf(sb),name=(st?'تقرير-'+s.name+'-'+sb.short:'كشف-'+sb.short+'-'+S.cls).replace(/[\/\\:*?"<>|\s]+/g,'-')+'.pdf';
+  return {name:name,bytes:pdfBytes(pages)};}
+function pdfShare(printHint){
+  var f;try{f=pdfFile();}catch(e){toast('تعذّر صنع ملف PDF',null,true);return;}
+  if(printHint)toast('اختر «طباعة» من القائمة');
+  shareFile(f.name,f.bytes,'application/pdf');
+}
 var FILEMODE=null;
 function pickFile(mode){FILEMODE=mode;var f=document.getElementById('filein');f.value='';f.click();}
 document.getElementById('filein').addEventListener('change',function(){
@@ -1135,7 +1260,9 @@ function onClick(ev){
   if(a==='allmax'){var it3=curItem(curComp()),pv=JSON.stringify(S.vals[it3.id]);S.students.forEach(function(x){if(S.vals[it3.id][x.id]===undefined)S.vals[it3.id][x.id]=it3.max;});S.ent.idx=S.students.length;render(true);toast('رُصدت '+it3.max+' لمن لم تُرصد درجته — عدّل الاستثناءات',function(){S.vals[it3.id]=JSON.parse(pv);S.ent.idx=0;});return true;}
   if(a==='del'){var id2=b.dataset.id,ix2=S.events.findIndex(function(x){return x.id===id2;});if(ix2<0)return false;var gone2=S.events.splice(ix2,1)[0];render(true);toast('حُذف الإدخال',function(){S.events.splice(ix2,0,gone2);});return true;}
   if(a==='pdf'){S.pdfKind=b.dataset.k;S.view='pdf';render();return true;}
-  if(a==='print'){doPrint(b.dataset.o);return false;}
+  if(a==='pdfsave'){pdfShare(false);return false;}
+  /* الطباعة: في تطبيق الشاشة الرئيسية على آيفون تُفتح قائمة المشاركة بملف PDF وفيها «طباعة»، وفي غيره شاشة الطباعة المعتادة */
+  if(a==='print'){if(navigator.standalone===true)pdfShare(true);else doPrint(b.dataset.o);return false;}
   if(a==='csv'){csvKashf();return false;}
   /* الإعدادات */
   if(a==='st'){
