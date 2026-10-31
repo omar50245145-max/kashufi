@@ -431,7 +431,7 @@ table.k td.e{color:var(--muted)}
    الدخول: يختار المعلم اسمه ويدخل رقمه السري (تُحفظ بصمته فقط).
    الحفظ: كل إدخال يُحفظ فوراً في قاعدة IndexedDB على الجهاز (وعند تعذّرها localStorage)، ولا يغادر الجهاز.
    الأعمال من ٤٠ بتوزيع كشف المتابعة، والتسميع عدد لا يدخل في المجموع، ولا تُقبل درجة تتجاوز حد عنصرها. */
-var WORKS=40, APPV='2026-10-23b';
+var WORKS=40, APPV='2026-10-31a';
 var DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 var MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var PER={'1':'الستة أسابيع الأولى','2':'الستة أسابيع الثانية'};
@@ -467,18 +467,18 @@ function fd(s){var x=new Date(s+'T12:00:00');return DAYS[x.getDay()]+' '+x.getDa
 
 /* ---------- نموذج البيانات ---------- */
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
-/* التوزيع المطابق للكشف: لكل فترة سلوك ٣ + مشاركة ٣ + واجبات ٣ + مشروع ٣٫٥، والقصير ١٥ في الفترة الثانية = ٤٠ */
+/* التوزيع: لكل فترة سلوك ٣ + مشاركة ٣ + واجبات ٣، وفي الفترة الثانية وحدها مشروع ٧ وقصير ١٥ = ٤٠ */
 function standardComps(){
   function c(name,mark,kind,period,items){return {id:uid(),name:name,mark:mark,kind:kind,period:period,items:items||[],per:1,step:.5};}
   function it(name,max){return {id:uid(),name:name,max:max,date:today()};}
   return [
-    c('السلوك',3,'beh','1'),c('المشاركة',3,'count','1'),c('الواجبات',3,'hand','1',[it('واجب ١',0)]),c('المشروع',3.5,'score','1',[it('المشروع',3.5)]),
-    c('السلوك',3,'beh','2'),c('المشاركة',3,'count','2'),c('الواجبات',3,'hand','2',[it('واجب ١',0)]),c('المشروع',3.5,'score','2',[it('المشروع',3.5)]),c('الاختبار القصير',15,'score','2',[it('الاختبار القصير',15)])
+    c('السلوك',3,'beh','1'),c('المشاركة',3,'count','1'),c('الواجبات',3,'hand','1',[it('واجب ١',0)]),
+    c('السلوك',3,'beh','2'),c('المشاركة',3,'count','2'),c('الواجبات',3,'hand','2',[it('واجب ١',0)]),c('المشروع',7,'score','2',[it('المشروع',7)]),c('الاختبار القصير',15,'score','2',[it('الاختبار القصير',15)])
   ];
 }
 var SUBJ_DEF={
-  isl:function(){return {id:'isl',name:'التربية الإسلامية',short:'الإسلامية',tasName:'تسميع الأحاديث',unit:'حديث',range:false,comps:standardComps(),tas:[{id:uid(),name:'أحاديث الفترة الأولى',count:6},{id:uid(),name:'أحاديث الفترة الثانية',count:6}]};},
-  qur:function(){return {id:'qur',name:'القرآن الكريم',short:'القرآن',tasName:'تسميع الآيات',unit:'آية',range:true,comps:standardComps(),tas:[{id:uid(),name:'سورة …',count:10}]};}
+  isl:function(){return {id:'isl',name:'التربية الإسلامية',short:'الإسلامية',tasName:'تسميع الأحاديث',unit:'حديث',proj7:true,comps:standardComps(),tas:[{id:uid(),name:'أحاديث الفترة الأولى',count:6},{id:uid(),name:'أحاديث الفترة الثانية',count:6}]};},
+  qur:function(){return {id:'qur',name:'القرآن الكريم',short:'القرآن',tasName:'تسميع الآيات',unit:'آية',proj7:true,comps:standardComps(),tas:[{id:uid(),name:'سورة …',count:10}]};}
 };
 function blankData(cls,ids){
   ids=ids||['isl','qur'];
@@ -527,6 +527,7 @@ function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return
 /* اسم الصف مثل «١٠ / ٣» يُعزل اتجاهه حتى لا ينقلب بجوار النص العربي */
 function cn_(x){return '<bdi dir="ltr">'+esc(x)+'</bdi>';}
 function r1(x){return Math.round(x*10)/10;}
+function r2(x){return Math.round(x*100)/100;}
 function sub(){return S.subjects.filter(function(s){return s.id===S.subj;})[0]||S.subjects[0];}
 function other(){return S.subjects.filter(function(s){return s.id!==sub().id;})[0];}
 function comps(p){return sub().comps.filter(function(c){return !p||c.period===p;});}
@@ -556,15 +557,31 @@ function compGrade(c,sid){
   var n=e.reduce(function(a,x){return a+x.d;},0);
   return Math.max(0,Math.min(c.mark,n*c.per));
 }
+/* المشروع ٧ في الفترة الثانية فقط (مرة واحدة لكل مادة، حتى لا يُلغى ما يعدّله المعلم لاحقاً):
+   مشروع الفترة الأولى يخرج من البنود ويبقى محفوظاً في removedComps مع درجاته، ودرجات مشروع الثانية تُضرب
+   بنسبة التغيير ليبقى من أخذ الدرجة كاملة كاملاً، ولا يتجاوز مجموع الأعمال ٤٠ */
+function moveProject(sb,d){
+  if(sb.proj7)return;sb.proj7=true;
+  var pj=function(p){return sb.comps.filter(function(c){return c.period===p&&isProj(c);})[0];},a=pj('1'),b=pj('2');
+  if(!a&&!b)return;
+  if(a&&!b){a.period='2';b=a;a=null;}
+  if(a){sb.comps.splice(sb.comps.indexOf(a),1);(sb.removedComps=sb.removedComps||[]).push(a);}
+  var old=b.mark,mx=r1(Math.min(7,WORKS-(worksSum(sb)-old)));
+  if(mx<=0||mx===old)return;
+  b.mark=mx;var k=mx/old;
+  b.items.forEach(function(it){var was=it.max,now=r2(was*k),v=d.vals[it.id];it.max=now;
+    if(v)Object.keys(v).forEach(function(sid){if(typeof v[sid]==='number')v[sid]=v[sid]===was?now:r2(v[sid]*k);});});
+}
 /* ترحيل بيانات النسخة السابقة: لمسات المشاركة القديمة = +١، وملاحظات السلوك القديمة تبقى ملاحظات بلا أثر في الدرجة */
 function migrate(t){
   (t.classes||[]).forEach(function(k){var d=k.data,kinds={};
-    d.subjects.forEach(function(sb){sb.comps.forEach(function(c){kinds[c.id]=c.kind;if(c.kind==='beh'&&!c.per)c.per=1;});});
+    d.vals=d.vals||{};
+    d.subjects.forEach(function(sb){moveProject(sb,d);sb.comps.forEach(function(c){kinds[c.id]=c.kind;if(c.kind==='beh'&&!c.per)c.per=1;});});
     d.events.forEach(function(e){if(e.d===undefined)e.d=kinds[e.cid]==='count'?1:0;});
   });
   return t;
 }
-/* شريط الكشف: الأربعون مقسومة إلى الفترتين بنسبة درجتيهما (١٢.٥ و٢٧.٥ في التوزيع الأصلي)، وكل جزء يمتلئ بما رُصد فيه */
+/* شريط الكشف: الأربعون مقسومة إلى الفترتين بنسبة درجتيهما (٩ و٣١ في التوزيع الأصلي)، وكل جزء يمتلئ بما رُصد فيه */
 function ledgerBar(sb,sid,big){
   var h='',l='';
   ['1','2'].forEach(function(p){var mx=r1(sb.comps.filter(function(c){return c.period===p;}).reduce(function(a,c){return a+c.mark;},0));if(!mx)return;
@@ -809,7 +826,6 @@ function tasSheet(sid){
   var sb=sub(),t=curTas(),s=stu(sid),set=(S.tv[t.id]=S.tv[t.id]||{})[sid]||[],u='';
   for(var i=1;i<=t.count;i++)u+='<button data-act="unit" data-sid="'+sid+'" data-u="'+i+'" aria-pressed="'+(set.indexOf(i)>=0)+'">'+i+'</button>';
   layer('<div class="row"><div><h2>'+esc(s.name)+'</h2><span class="small dim">'+esc(t.name)+' · سمّع <span class="num" id="tcnt">'+set.length+'</span> من <span class="num">'+t.count+'</span></span></div><button class="btn pri" data-act="closel">تم</button></div>'+
-  '<div class="seg" role="group" aria-label="طريقة التحديد"><button data-act="rmode" data-v="1" aria-pressed="'+sb.range+'">حتى هذا الرقم</button><button data-act="rmode" data-v="0" aria-pressed="'+(!sb.range)+'">رقم واحد</button></div>'+
   '<div class="units" id="units">'+u+'</div><div class="row"><button class="btn" style="flex:1" data-act="tall" data-sid="'+sid+'">الكل</button><button class="btn" style="flex:1" data-act="tnone" data-sid="'+sid+'">مسح</button></div>');
 }
 /* رصد الطالب: لوحة واحدة فيها كل بنود الفترة للطالب المختار (السلوك والمشاركة والواجب والمشروع والقصير والتسميع)
@@ -866,7 +882,7 @@ function qsHtml(){
   if(t){var set=((S.tv[t.id]=S.tv[t.id]||{})[s.id])||[],u='';
     for(var n=1;n<=t.count;n++)u+='<button data-act="qsunit" data-u="'+n+'" aria-pressed="'+(set.indexOf(n)>=0)+'">'+n+'</button>';
     h+='<div class="qrow pt ct'+(S.cur==='tas'?' on':'')+'" id="qr-tas"><div class="row"><div><div class="lb">'+sb.tasName+'<span class="pill">عدد فقط</span></div><span class="g">سمّع <span class="num">'+set.length+'</span> <span class="dim small">من '+t.count+'</span></span></div>'+qpm('qstv','',set.length>0,set.length<t.count,sb.tasName)+'</div>'+
-      (sb.tas.length>1?'<div class="chips">'+sb.tas.map(function(x){return '<button class="chip" data-act="qstas" data-id="'+x.id+'" aria-pressed="'+(x.id===t.id)+'">'+esc(x.name)+'</button>';}).join('')+'</div>':'<span class="small dim">'+esc(t.name)+(sb.range?' · المس آخر '+sb.unit+' سمّعها':'')+'</span>')+
+      (sb.tas.length>1?'<div class="chips">'+sb.tas.map(function(x){return '<button class="chip" data-act="qstas" data-id="'+x.id+'" aria-pressed="'+(x.id===t.id)+'">'+esc(x.name)+'</button>';}).join('')+'</div>':'<span class="small dim">'+esc(t.name)+'</span>')+
       '<div class="units">'+u+'</div></div>';}
   h+='<button class="btn pri" data-act="closel">تم</button>';
   return h;
@@ -881,11 +897,9 @@ function bump(c,sid,dn){
   var e={id:uid(),cid:c.id,date:today(),sid:sid,d:dn?-1:1};S.events.push(e);return e;
 }
 function bumpToast(c,sid,e,after){toast((e.d<0?'−':'+')+c.per+' '+esc(c.name)+' · '+esc(first(stu(sid).name))+' — '+r1(compGrade(c,sid))+' من '+c.mark,function(){S.events=S.events.filter(function(x){return x.id!==e.id;});if(after)after();});}
-/* تحديد ما سمّعه الطالب: «حتى هذا الرقم» يحدد من ١ إليه، و«رقم واحد» يبدّل الرقم وحده */
+/* تحديد ما سمّعه الطالب: كل لمسة تبدّل الرقم الملموس وحده، بلا ارتباط بغيره */
 function setUnit(t,sid,u){var set=S.tv[t.id][sid]||[];
-  if(sub().range){var all=[];var has=set.length===u&&set.indexOf(u)>=0;for(var i=1;i<=(has?u-1:u);i++)all.push(i);set=all;}
-  else{set=set.indexOf(u)>=0?set.filter(function(x){return x!==u;}):set.concat([u]).sort(function(x,y){return x-y;});}
-  S.tv[t.id][sid]=set;}
+  S.tv[t.id][sid]=set.indexOf(u)>=0?set.filter(function(x){return x!==u;}):set.concat([u]).sort(function(x,y){return x-y;});}
 function newItemSheet(){
   var c=curComp(),n=c.items.length+1,base=c.kind==='hand'?'واجب':c.name;
   S.newMax=c.items.length?c.items[c.items.length-1].max||10:10;
@@ -1248,7 +1262,6 @@ function onClick(ev){
   if(a==='unit'){var sd=b.dataset.sid;setUnit(curTas(),sd,Number(b.dataset.u));refreshUnits(sd);return true;}
   if(a==='tall'){var t3=curTas(),a2=[];for(var j=1;j<=t3.count;j++)a2.push(j);S.tv[t3.id][b.dataset.sid]=a2;refreshUnits(b.dataset.sid);return true;}
   if(a==='tnone'){S.tv[curTas().id][b.dataset.sid]=[];refreshUnits(b.dataset.sid);return true;}
-  if(a==='rmode'){sub().range=b.dataset.v==='1';b.parentNode.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',x===b);});return true;}
   if(a==='allhw'){var c2=curComp(),it2=curItem(c2),prev=JSON.stringify(S.vals[it2.id]||{});S.vals[it2.id]={};S.students.forEach(function(x){S.vals[it2.id][x.id]='done';});render(true);toast('«سلّم» للجميع — المس من لم يسلّم',function(){S.vals[it2.id]=JSON.parse(prev);});return true;}
   if(a==='beh'){var note=(document.getElementById('bnote')||{}).value||'',bc=sub().comps.filter(function(c){return c.kind==='beh';}),bcp=bc.filter(function(c){return c.period===S.period;})[0]||bc[0]||sub().comps[0];
     var e2={id:uid(),cid:bcp.id,date:today(),sid:b.dataset.sid,d:0,pol:b.dataset.pol,tag:b.dataset.tag,text:note.trim()};S.events.push(e2);closeLayer();render(true);if(QS.back){QS.back=false;qsSheet(e2.sid);}
