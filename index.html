@@ -154,6 +154,12 @@ svg.ic{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;str
 .sbtns button small{font-weight:500;font-size:12.5px;opacity:.8}
 .sbtns .isl{background:var(--brand-pale);color:var(--brand-ink)}
 .sbtns .qur{background:var(--qur-pale);color:var(--qur)}
+/* المادة الناقصة في صف بمادة واحدة: زر منقّط لإضافتها (بطلبه 2026-11-19) */
+.sbtns .addsb{background:transparent;border:1.5px dashed var(--control);color:var(--brand-ink);align-items:center;text-align:center}
+.subjrow{display:flex;flex-wrap:wrap;gap:8px}
+.subjrow .chip{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;font-weight:600;font-size:14.5px}
+.subjrow .chip.isl{background:var(--brand-pale);color:var(--brand-ink)}
+.subjrow .chip.qur{background:var(--qur-pale);color:var(--qur)}
 
 /* الدخول */
 .login{display:flex;flex-direction:column;gap:var(--gap);padding-top:12px}
@@ -431,7 +437,7 @@ table.k td.e{color:var(--muted)}
    الدخول: يختار المعلم اسمه ويدخل رقمه السري (تُحفظ بصمته فقط).
    الحفظ: كل إدخال يُحفظ فوراً في قاعدة IndexedDB على الجهاز (وعند تعذّرها localStorage)، ولا يغادر الجهاز.
    الأعمال من ٤٠ بتوزيع كشف المتابعة، والتسميع عدد لا يدخل في المجموع، ولا تُقبل درجة تتجاوز حد عنصرها. */
-var WORKS=40, APPV='2026-10-31a';
+var WORKS=40, APPV='2026-11-19a';
 var DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 var MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var PER={'1':'الستة أسابيع الأولى','2':'الستة أسابيع الثانية'};
@@ -528,6 +534,8 @@ function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return
 function cn_(x){return '<bdi dir="ltr">'+esc(x)+'</bdi>';}
 function r1(x){return Math.round(x*10)/10;}
 function r2(x){return Math.round(x*100)/100;}
+/* المواد التي لم تُضف بعد إلى صف (الصف المنشأ بمادة واحدة) */
+function missingSubj(d){return ['isl','qur'].filter(function(k){return !d.subjects.some(function(x){return x.id===k;});});}
 function sub(){return S.subjects.filter(function(s){return s.id===S.subj;})[0]||S.subjects[0];}
 function other(){return S.subjects.filter(function(s){return s.id!==sub().id;})[0];}
 function comps(p){return sub().comps.filter(function(c){return !p||c.period===p;});}
@@ -637,7 +645,8 @@ function vHome(){
   var old=(!t.v1seen&&v1Classes().length)?'<div class="card"><b>وُجدت بيانات من الإصدار الأول على هذا الجهاز</b><p class="small dim">يمكنك استيراد أسماء طلاب فصولك القديمة إلى صفوف جديدة.</p><div class="row"><button class="btn soft" style="flex:1" data-act="v1import">استيراد الأسماء</button><button class="btn plain" data-act="v1hide">إخفاء</button></div></div>':'';
   var cards=t.classes.map(function(c){var d=c.data;
     return '<div class="ccard'+(k&&c.id===k.id?' cur':'')+'"><div class="row"><div><div class="nm">الصف '+cn_(d.cls)+'</div><span class="small dim"><span class="num">'+d.students.length+'</span> طالباً</span></div><button class="iconbtn" data-act="clsset" data-cid="'+c.id+'" aria-label="إعدادات الصف">'+IC.set+'</button></div>'+
-      '<div class="sbtns">'+d.subjects.map(function(sb){return '<button class="'+sb.id+'" data-act="openc" data-cid="'+c.id+'" data-s="'+sb.id+'">'+sb.name+'<small>ابدأ الرصد ←</small></button>';}).join('')+'</div></div>';}).join('');
+      '<div class="sbtns">'+d.subjects.map(function(sb){return '<button class="'+sb.id+'" data-act="openc" data-cid="'+c.id+'" data-s="'+sb.id+'">'+sb.name+'<small>ابدأ الرصد ←</small></button>';}).join('')+
+      missingSubj(d).map(function(k){return '<button class="addsb" data-act="addsubj" data-cid="'+c.id+'" data-s="'+k+'">+ إضافة '+SUBJ_DEF[k]().name+'</button>';}).join('')+'</div></div>';}).join('');
   return '<div class="hd"><div class="brandrow">'+MARK+'<div class="t"><h1>كشوفي</h1><span class="small dim">'+fd(today())+'</span></div></div>'+savedNote()+'</div>'+
   '<div class="who-t"><span class="av '+avc(t.name)+'">'+esc(initial(t.name))+'</span><span class="tx"><b>'+esc(t.name)+'</b><br><span class="small dim">حسابك الخاص · <span class="num">'+t.classes.length+'</span> صفوف</span></span><button data-act="account">حسابي</button></div>'+
   bk+old+'<div class="sec">صفوفي</div>'+(cards||'<p class="small dim">لا صفوف بعد.</p>')+'<button class="btn dash" data-act="newclass">+ صف جديد</button>';
@@ -950,6 +959,8 @@ function classSettingsSheet(cid){
   var t=teacher(),c=t.classes.filter(function(x){return x.id===cid;})[0],d=c.data;
   layer('<div class="row"><h2>الصف '+cn_(d.cls)+'</h2><button class="btn" data-act="closel">تم</button></div>'+
   '<label class="small dim" for="clsn">اسم الصف</label><input type="text" id="clsn" data-clsname="'+cid+'" value="'+esc(d.cls)+'">'+
+  '<div class="sec">المواد</div><div class="subjrow">'+d.subjects.map(function(x){return '<span class="chip '+x.id+'">'+x.name+'</span>';}).join('')+'</div>'+
+  missingSubj(d).map(function(k){return '<button class="btn dash" data-act="addsubj" data-cid="'+cid+'" data-s="'+k+'">+ إضافة مادة '+SUBJ_DEF[k]().name+' لهذا الصف</button>';}).join('')+
   '<button class="btn soft" data-act="clsdist" data-cid="'+cid+'">توزيع الدرجات والتسميع</button>'+
   '<div class="sec">الطلاب<span class="s"><span class="num">'+d.students.length+'</span></span></div>'+
   '<div>'+d.students.map(function(s,i){return '<div class="srow"><span class="i">'+(i+1)+'</span><input data-sname="'+s.id+'" data-cid="'+cid+'" value="'+esc(s.name)+'" aria-label="اسم الطالب"><button class="del" data-act="sdel" data-cid="'+cid+'" data-sid="'+s.id+'" aria-label="حذف الطالب">'+IC.trash+'</button></div>';}).join('')+'</div>'+
@@ -1191,6 +1202,11 @@ function onClick(ev){
   if(a==='openc'){closeLayer();openClass(b.dataset.cid,b.dataset.s);render();return true;}
   if(a==='classes'){classesSheet();return false;}
   if(a==='clsset'){classSettingsSheet(b.dataset.cid);return false;}
+  /* إضافة المادة الناقصة لصف أُنشئ بمادة واحدة: تُضاف بتوزيعها الافتراضي وبلا رصد، والطلاب أنفسهم */
+  if(a==='addsubj'){var ac=teacher().classes.filter(function(x){return x.id===b.dataset.cid;})[0],ak=b.dataset.s;if(!ac||!SUBJ_DEF[ak]||ac.data.subjects.some(function(x){return x.id===ak;}))return false;
+    ac.data.subjects.push(SUBJ_DEF[ak]());ac.data.subjects.sort(function(x,y){return (x.id==='isl'?0:1)-(y.id==='isl'?0:1);});
+    var inSheet=!!b.closest('.sheetp');render();if(inSheet)classSettingsSheet(ac.id);
+    toast('أُضيفت مادة '+SUBJ_DEF[ak]().name+' إلى الصف '+cn_(ac.data.cls));return true;}
   if(a==='clsdist'){closeLayer();openClass(b.dataset.cid);S.view='setup';render();return true;}
   if(a==='clsdel'){var t=teacher(),ix=t.classes.findIndex(function(x){return x.id===b.dataset.cid;}),gone=t.classes.splice(ix,1)[0];if(t.cid===gone.id&&t.classes.length)t.cid=t.classes[0].id;bind();closeLayer();APP.ui='home';render();
     toast('حُذف الصف '+cn_(gone.data.cls),function(){t.classes.splice(ix,0,gone);bind();});return true;}
